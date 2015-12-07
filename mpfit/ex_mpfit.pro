@@ -8,16 +8,12 @@ add_path, 'pro'
 add_path, 'mpfit'
 
 
-; Set up energy array.
-; Right now, this array has to match what's returned in the COARSE energy from the 
-; base functions, so that's a bug to fix.
-energy = findgen(20./0.3)*0.3
-
-
 ; Retrieve the measured FOXSI-2 data to compare against.
 restore, 'sav/foxsi2-d6-spex.sav'
+energy = findgen(20./0.3)*0.3
 measured = interpol( spec.spec_p, spec.energy_kev, energy )
-err = sqrt(measured) + 0.001
+err = sqrt(measured)
+err[ where( err lt 1. ) ] = 1.		; getting appropriate errors seems to be key!
 i = where( energy gt 5. and energy lt 10. )			; fitting only 5-10 keV
 
 
@@ -25,10 +21,13 @@ i = where( energy gt 5. and energy lt 10. )			; fitting only 5-10 keV
 ; Arguments to MPFITFUN are [1] name of function, [2] energies to fit, 
 ; [3] measured values to fit, [4] errors on measured values, and [5] start value
 
-; Set the constraints for the parameters.  See MPFIT doc.
+; Run MPFIT.
+param = mpfitfun('linz_testfunction', energy[i], measured[i], err[i], 1.)
+
+; For later. We can set the constraints for the parameters.  See MPFIT doc.
 ;constraint = replicate({fixed:0, limited:[0,0], limits:[0.D,0.D]},4)
 ;constraint = {fixed:0, limited:[1,1], limits:[0.001D,1.0D]}
-param = mpfitfun('linz_testfunction', energy[i], measured[i], err[i], 1.);, parinfo=constraint)
+;param = mpfitfun('linz_testfunction', energy[i], measured[i], err[i], 1., parinfo=constraint)
 
 
 ; Best value for the filling factor is now in PARAM.  Rerun the function to see the 
@@ -42,7 +41,7 @@ obs = linz_testfunction( energy[i], fill )
 !p.multi=0
 loadct, 0
 hsi_linecolors
-plot_err, energy, obs, yerr=sqrt(double(obs)/integration), /xlo, /ylo, $
+plot_err, energy[i], obs, yerr=sqrt(obs), /xlo, /ylo, $
 	xr=[3.,30.], yr = [1.,1.e2], $
 	/xsty, psym=10, xtitle='Energy [keV]', ytitle='Counts s!U-1!N keV!U-1!N', $
 	charsi=ch, thick=4, $

@@ -24,6 +24,10 @@ function	linz_testfunction, fit_energy, fill
 
 	obs = interpol( obs, coarse, fit_energy )
 	
+	print, 'Diagnostics: ', fill, minmax(obs)
+	print, 'Result is '
+	print, obs
+	
 	return, obs
 	
 end	
