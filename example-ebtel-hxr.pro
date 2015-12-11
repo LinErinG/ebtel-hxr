@@ -25,7 +25,7 @@ fill=1.									; filling factor
 
 ;; First is just a wrapper for EBTEL.
 dem_cm5 = run_ebtel( time, heat0=0.01, te=te, dens=dens, logtdem=logtdem, $
-										 avg_dem_cm5_cor=avg_dem_cm5_cor )
+										 avg_dem_cm5_cor=avg_dem_cm5_cor, /classical )
 
 ; put filling factor outside EBTEL wrapper so we can test several filling factors 
 ; without rerunning EBTEL.
@@ -36,7 +36,7 @@ if exist( avg_dem_cm5_cor ) then avg_dem_cm5_cor *= fill
 hxr = dem_hxr( logtdem, dem_cm5, area, energy )
 
 ;; Fold through HXR instrument response (example FOXSI-SMEX)
-instr = 'foxsi2'
+instr = 'foxsi-smex'
 count_rate = hxr_counts( energy, hxr, instr=instr, effarea=effarea )
 
 ; Get total counts and integrate for X seconds.
@@ -57,13 +57,13 @@ popen, 'ebtel-plots', xsi=10, ysi=8, /land			; for printing plots.  Needs specia
 ; EBTEL OUTPUTS
 
 !p.multi=[0,2,2]
-ch=1.0
+ch=1.3
 plot, time, te, xtit='Time [s]', ytit='Temperature [K]', charsi=ch, thick=4, title='Single nanoflare'
 plot, time, dens, xtit='Time [s]', ytit='Density [cm!U-3!N]', charsi=ch, thick=4, title='Single nanoflare'
-plot, logtdem, dem_cm5, xtit='Log T [log MK]', ytit='DEM [cm!U-5!N K!U-1!N]', $
-	/ylog, xra=[5.5,7.], yra=minmax(dem_cm5[where(dem_cm5 gt 0.)]), charsi=ch, $
+plot, logtdem, dem_cm5/length/2, xtit='Log T [log MK]', ytit='DEM [cm!U-6!N K!U-1!N]', $
+	/ylog, xra=[5.5,7.5], yra=[1.e8,1.e14], charsi=ch, $
 	thick=4, title='Time-averaged DEM'
-oplot, logtdem, avg_dem_cm5_cor, line=2, thick=2
+oplot, logtdem, avg_dem_cm5_cor/length/2, line=2, thick=2
 al_legend, ['Corona + TR','Corona only'], line=[0,2], thick=4, /top, /right, box=0
 
 em_log_cm3 = dem_cm5 * area * alog(10.) * 10.^logtdem
@@ -72,12 +72,12 @@ em_log_cm3_cor = avg_dem_cm5_cor * area * alog(10.) * 10.^logtdem
 ; EM
 
 plot, logtdem, em_log_cm3, xtit='Log T [log MK]', ytit='DEM!Llog!N [cm!U-3!N]', charsi=ch, thick=4, $
-	/ylog, xra=[5.5,7.5], yra=10.*minmax(em_log_cm3[where(em_log_cm3 gt 0.)]), $
+	/ylog, xra=[5.5,7.5], yra=minmax(em_log_cm3[where(em_log_cm3 gt 0.)]), $
 	tit='DEM_log in macro area, filling factor '+string(fill, format='(F0.2)')
 oplot, logtdem, em_log_cm3_cor, line=2, thick=4
 al_legend, ['Corona + TR','Corona only'], line=[0,2], thick=2, /top, /right, box=0
-peak = max( em_log_cm3_cor, i_peak )
-oplot, logtdem[i_peak]*[1.,1.], [1.d42,1.d46], line=1
+;peak = max( em_log_cm3_cor, i_peak )
+;oplot, logtdem[i_peak]*[1.,1.], [1.d42,1.d46], line=1
 
 
 ; HXR FLUX
@@ -115,8 +115,8 @@ al_legend, strtrim(logtdem[sparse],2), col=indgen(n_sparse)*255/n_sparse, $
 
 ; FINAL, 'DIRTY' OBSERVATION
 
-plot_err, coarse, obs, yerr=sqrt(double(obs)/integration), /xlo, /ylo, xr=[3.,30.], $
-	/xsty, psym=10, xtitle='Energy [keV]', ytitle='Counts s!U-1!N keV!U-1!N', $
+plot_err, coarse, obs, yerr=sqrt(double(obs)/integration), /xlo, /ylo, xr=[2.,20.], $
+	yr=[1.e0,1.e4], /xsty, psym=10, xtitle='Energy [keV]', ytitle='Counts s!U-1!N keV!U-1!N', $
 	charsi=ch, thick=4, $
 	title='Binned count spectrum'
 

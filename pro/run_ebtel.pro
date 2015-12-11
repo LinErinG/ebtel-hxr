@@ -40,7 +40,8 @@
 
 FUNCTION	RUN_EBTEL, time, duration=duration, t_heat=t_heat, nFlares=nFlares, $
 										 heat0=heat0, heat_bkg, length, te=te, dens=dens, p=p, v=v, $
-										 c11=c11, avg_dem_cm5_cor=avg_dem_cm5_cor, logtdem=logtdem, _extra = _extra
+										 c11=c11, avg_dem_cm5_cor=avg_dem_cm5_cor, logtdem=logtdem, $
+										 stop = stop, _extra = _extra
 	
 	default, duration, long(10000)
 	default, t_heat, 500
@@ -52,9 +53,11 @@ FUNCTION	RUN_EBTEL, time, duration=duration, t_heat=t_heat, nFlares=nFlares, $
 	nTime = duration*nFlares
 	time = findgen(nTime)		;  define time array 
 	heat = fltarr(duration)		;  define corresponding heating array
-	for i = 0, t_heat/2 do heat(i) = heat0*time(i)/250.  ;  triangular profile rise
-	for i = t_heat/2+1, t_heat do heat(i) = heat0*(t_heat - time(i))/t_heat/2  ;  decay
+	for i = 0, t_heat/2 do heat(i) = heat0*time(i)/(t_heat/2)  ;  triangular profile rise
+	for i = t_heat/2+1, t_heat do heat(i) = heat0*(t_heat - time(i))/(t_heat/2)  ;  decay
 	heat = heat + heat_bkg
+	
+	if keyword_set(stop) then stop
 
 	resolve_routine, 'ebtel2', /compile
 	ebtel2, time, heat, length, te, dens, p, v, ta, na, pa, c11, dem_tr, dem_cor, logtdem, _extra=_extra
