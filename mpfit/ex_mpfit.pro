@@ -10,9 +10,10 @@ add_path, 'mpfit'
 
 ; Retrieve the measured FOXSI-2 data to compare against.
 restore, 'sav/foxsi2-d6-spex.sav'
-energy = findgen(20./0.3)*0.3
+bin = 0.3
+energy = findgen(20./0.3)*bin
 measured = interpol( spec.spec_p, spec.energy_kev, energy ) / dt
-err = sqrt(measured) / dt
+err = sqrt(measured * dt / bin)
 err[ where( err lt 1. ) ] = 1.		; getting appropriate errors seems to be key!
 i = where( energy gt 5. and energy lt 10. )			; fitting only 5-10 keV
 
