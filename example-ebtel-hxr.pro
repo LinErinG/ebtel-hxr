@@ -3,29 +3,27 @@
 ; observations from EBTEL simulations.
 ;
 
-add_path, '~/local-git-repo/ebtel-idl/'				; or wherever your EBTEL codes are
+add_path, '~/local-git-repo/ebtel-idl/'	; or wherever your EBTEL codes are
 add_path, 'pro'
 
 ;; Set up parameters
-
 heat0 = 0.01          	; amplitude of (nano)flare [erg cm^-3 s^-1]
-length = 7.5e9					; loop half-length
-scale_height = 5.e9			; coronal scale height (or any desired height)
-flare_dur = 500.				; duration of heating event [seconds]
+length = 7.5e9		; loop half-length
+scale_height = 5.e9	; coronal scale height (or any desired height)
+flare_dur = 500.	; duration of heating event [seconds]
 
-solar_dx_arcsec = 60.		; Diameter of solar area of interest.
-												; Examples: FOXSI FWHM (5"), NuSTAR pixel (12"), AR size (~60")
-solar_dx_cm  = solar_dx_arcsec*0.725d8			; Instrument resolution, centimeters
-area = solar_dx_cm^2 * scale_height / 2 / length		; "effective" area of emitting plasma
+solar_dx_arcsec = 60.	; Diameter of solar area of interest.
+; Examples: FOXSI FWHM (5"), NuSTAR pixel (12"), AR size (~60")
+solar_dx_cm  = solar_dx_arcsec*0.725d8		; Instrument resolution, centimeters
+area = solar_dx_cm^2 * scale_height / 2 / length	; "effective" area of emitting plasma
 
-fill=1.									; filling factor
-
+fill=1.		; filling factor
 
 ;; Next are the three main functions.
 
 ;; First is just a wrapper for EBTEL.
-dem_cm5 = run_ebtel( time, heat0=0.01, te=te, dens=dens, logtdem=logtdem, $
-										 avg_dem_cm5_cor=avg_dem_cm5_cor, /classical )
+dem_cm5 = run_ebtel( time, heat0=heat0, length=length, t_heat=flare_dur, te=te, dens=dens, $
+logtdem=logtdem, avg_dem_cm5_cor=avg_dem_cm5_cor)
 
 ; put filling factor outside EBTEL wrapper so we can test several filling factors 
 ; without rerunning EBTEL.
@@ -35,8 +33,8 @@ if exist( avg_dem_cm5_cor ) then avg_dem_cm5_cor *= fill
 ;; Next, calculate HXR flux based on EBTEL DEM and relevant area
 hxr = dem_hxr( logtdem, dem_cm5, area, energy )
 
-;; Fold through HXR instrument response (example FOXSI-SMEX)
-instr = 'foxsi-smex'
+;; Fold through HXR instrument response (example NuSTAR)
+instr = 'nustar'
 count_rate = hxr_counts( energy, hxr, instr=instr, effarea=effarea )
 
 ; Get total counts and integrate for X seconds.
@@ -46,13 +44,11 @@ counts = total( count_rate, 1 )*integration
 obs = keep_it_real( energy, counts, coarse )
 obs[ where(obs lt 0)] = 0.
 
-
-
 ;
 ; All of the following is to plot intermediate variables and end results.
 ;
 
-popen, 'ebtel-plots', xsi=10, ysi=8, /land			; for printing plots.  Needs special library.
+popen, 'ebtel-plots', xsi=10, ysi=8, /land	; for printing plots.  Needs special library.
 
 ; EBTEL OUTPUTS
 
@@ -79,7 +75,6 @@ al_legend, ['Corona + TR','Corona only'], line=[0,2], thick=2, /top, /right, box
 ;peak = max( em_log_cm3_cor, i_peak )
 ;oplot, logtdem[i_peak]*[1.,1.], [1.d42,1.d46], line=1
 
-
 ; HXR FLUX
 
 loadct, 13
@@ -92,12 +87,10 @@ for i=0, n_sparse-1 do oplot, energy, hxr[sparse[i],*], col=255/n_sparse*i, thic
 al_legend, strtrim(logtdem[sparse],2), color=indgen(n_sparse)*255/n_sparse, $
 	/right, box=0, charsi=0.7, line=0, thick=4
 
-
 ; EFFECTIVE AREA
 
 plot, energy, effarea, charsi=ch, thick=4, xtitle='Energy [keV]', $
 	ytitle='Effective area [cm!U2!N]', title=instr+' effective area'
-
 
 ; PREDICTED COUNT RATE
 
@@ -107,17 +100,15 @@ nonzero = where( max( count_rate, dim=2 ) gt 0. )
 sparse = nonzero[0:*:5]
 n_sparse = n_elements( sparse )
 plot, energy, count_rate[0,*], /xlo, /ylo, yr=minmax(hxr), charsi=ch, thick=4, $
-	xtit='Energy [keV]', ytit='Counts s!U-1!N keV!U-1!N pix!U-1!N', tit='FOXSI counts'
+	xtit='Energy [keV]', ytit='Counts s!U-1!N keV!U-1!N', tit=instr+' counts'
 for i=0, n_sparse-1 do oplot, energy, count_rate[sparse[i],*], col=255/n_sparse*i, thick=4
 al_legend, strtrim(logtdem[sparse],2), col=indgen(n_sparse)*255/n_sparse, $
 	/right, box=0, charsi=0.7, line=0, thick=4
 
-
 ; FINAL, 'DIRTY' OBSERVATION
 
 plot_err, coarse, obs, yerr=sqrt(double(obs)/integration), /xlo, /ylo, xr=[2.,20.], $
-	yr=[1.e0,1.e4], /xsty, psym=10, xtitle='Energy [keV]', ytitle='Counts s!U-1!N keV!U-1!N', $
-	charsi=ch, thick=4, $
-	title='Binned count spectrum'
+	yr=[1.e0,1.e4], /xsty, psym=10, xtitle='Energy [keV]', ytitle='Counts keV!U-1!N', $
+	charsi=ch, thick=4, title='Binned count spectrum'
 
-pclose			; for printing plots.  Needs special library.
+pclose	; for printing plots.  Needs special library.
