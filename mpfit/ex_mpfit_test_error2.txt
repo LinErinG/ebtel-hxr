@@ -1,0 +1,286 @@
+IDL> ex_mpfit_test, instr='nustar', region=0, /save_fit, /save_plot
+/home/andrew/ebtel-master/ added to IDL path.
+/home/andrew/foxsi/ebtel-hxr-master/ added to IDL path.
+/home/andrew/foxsi/ebtel-hxr-master/pro added to IDL path.
+/home/andrew/foxsi/ebtel-hxr-master/mpfit added to IDL path.
+% RESTORE: Portable (XDR) SAVE/RESTORE file.
+% RESTORE: Save file written by iain@ophelia, Wed Oct 14 00:22:24 2015.
+% RESTORE: IDL version 8.4 (darwin, x86_64).
+% RESTORE: Restored variable: ENGS.
+% RESTORE: Restored variable: COUNTS_FLUX.
+% RESTORE: Restored variable: IDS.
+% RESTORE: Restored variable: LVT.
+% RESTORE: Restored variable: DUR.
+
+
+DIAGNOSTICS: 
+  params:     0.0100000      1.00000      500.000  6.00000e+09
+  heat0:     0.0100000
+  fill:       1.00000
+  flare_dur:       500.000
+
+
+% MPFIT: WARNING: data is DOUBLE but parameters are FLOAT
+% MPFIT:          (converting parameters to DOUBLE)
+Iter      1   CHI-SQUARE =   1.4024888E+08          DOF = 9
+    P(0) =            0.0100000
+    P(1) =              1.00000
+    P(2) =              500.000
+    P(3) =          6.00000E+09
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998      0.99900000       500.00000   6.0000000e+09
+  heat0:     0.0099999998
+  fill:       0.99900000
+  flare_dur:        500.00000
+
+
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998       1.0000000       500.00000   6.1000000e+09
+  heat0:     0.0099999998
+  fill:        1.0000000
+  flare_dur:        500.00000
+
+
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998     0.096608027       500.00000   1.0000000e+09
+  heat0:     0.0099999998
+  fill:      0.096608027
+  flare_dur:        500.00000
+
+
+Iter      2   CHI-SQUARE =       47035663.          DOF = 9
+    P(0) =            0.0100000
+    P(1) =            0.0966080
+    P(2) =              500.000
+    P(3) =          1.00000E+09
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998     0.097608027       500.00000   1.0000000e+09
+  heat0:     0.0099999998
+  fill:      0.097608027
+  flare_dur:        500.00000
+
+
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998     0.096608027       500.00000   1.1000000e+09
+  heat0:     0.0099999998
+  fill:      0.096608027
+  flare_dur:        500.00000
+
+
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998      0.33220036       500.00000   4.7800613e+09
+  heat0:     0.0099999998
+  fill:       0.33220036
+  flare_dur:        500.00000
+
+
+Iter      3   CHI-SQUARE =       24299229.          DOF = 9
+    P(0) =            0.0100000
+    P(1) =             0.332200
+    P(2) =              500.000
+    P(3) =          4.78006E+09
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998      0.33320036       500.00000   4.7800613e+09
+  heat0:     0.0099999998
+  fill:       0.33320036
+  flare_dur:        500.00000
+
+
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998      0.33220036       500.00000   4.8800613e+09
+  heat0:     0.0099999998
+  fill:       0.33220036
+  flare_dur:        500.00000
+
+
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998      0.32286462       500.00000   8.9999995e+09
+  heat0:     0.0099999998
+  fill:       0.32286462
+  flare_dur:        500.00000
+
+
+Iter      4   CHI-SQUARE =       6438001.3          DOF = 9
+    P(0) =            0.0100000
+    P(1) =             0.322865
+    P(2) =              500.000
+    P(3) =          9.00000E+09
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998      0.32386462       500.00000   8.9999995e+09
+  heat0:     0.0099999998
+  fill:       0.32386462
+  flare_dur:        500.00000
+
+
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998      0.32286462       500.00000   8.8999995e+09
+  heat0:     0.0099999998
+  fill:       0.32286462
+  flare_dur:        500.00000
+
+
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998    0.0019289188       500.00000   8.9999995e+09
+  heat0:     0.0099999998
+  fill:     0.0019289188
+  flare_dur:        500.00000
+
+
+Iter      5   CHI-SQUARE =       850.39154          DOF = 9
+    P(0) =            0.0100000
+    P(1) =           0.00192892
+    P(2) =              500.000
+    P(3) =          9.00000E+09
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998    0.0029289188       500.00000   8.9999995e+09
+  heat0:     0.0099999998
+  fill:     0.0029289188
+  flare_dur:        500.00000
+
+
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998    0.0019289188       500.00000   8.8999995e+09
+  heat0:     0.0099999998
+  fill:     0.0019289188
+  flare_dur:        500.00000
+
+
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998    0.0019168598       500.00000   8.9999995e+09
+  heat0:     0.0099999998
+  fill:     0.0019168598
+  flare_dur:        500.00000
+
+
+Iter      6   CHI-SQUARE =       850.38243          DOF = 9
+    P(0) =            0.0100000
+    P(1) =           0.00191686
+    P(2) =              500.000
+    P(3) =          9.00000E+09
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998    0.0029168598       500.00000   8.9999995e+09
+  heat0:     0.0099999998
+  fill:     0.0029168598
+  flare_dur:        500.00000
+
+
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998    0.0019168598       500.00000   8.8999995e+09
+  heat0:     0.0099999998
+  fill:     0.0019168598
+  flare_dur:        500.00000
+
+
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998    0.0019168589       500.00000   8.9999995e+09
+  heat0:     0.0099999998
+  fill:     0.0019168589
+  flare_dur:        500.00000
+
+
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998    0.0019168589       500.00000   8.9999995e+09
+  heat0:     0.0099999998
+  fill:     0.0019168589
+  flare_dur:        500.00000
+
+
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998    0.0019168597       500.00000   8.9999995e+09
+  heat0:     0.0099999998
+  fill:     0.0019168597
+  flare_dur:        500.00000
+
+
+Iter      7   CHI-SQUARE =       850.38242          DOF = 9
+    P(0) =            0.0100000
+    P(1) =           0.00191686
+    P(2) =              500.000
+    P(3) =          9.00000E+09
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998    0.0029168597       500.00000   8.9999995e+09
+  heat0:     0.0099999998
+  fill:     0.0029168597
+  flare_dur:        500.00000
+
+
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998    0.0019168597       500.00000   8.8999995e+09
+  heat0:     0.0099999998
+  fill:     0.0019168597
+  flare_dur:        500.00000
+
+
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998    0.0019168595       500.00000   8.9999995e+09
+  heat0:     0.0099999998
+  fill:     0.0019168595
+  flare_dur:        500.00000
+
+
+Iter      7   CHI-SQUARE =       850.38242          DOF = 9
+    P(0) =            0.0100000
+    P(1) =           0.00191686
+    P(2) =              500.000
+    P(3) =          9.00000E+09
+
+
+DIAGNOSTICS: 
+  params:     0.0099999998    0.0019168597       500.00000   8.9999995e+09
+  heat0:     0.0099999998
+  fill:     0.0019168597
+  flare_dur:        500.00000
+
+
+% Variable is undefined: SCALE_HEIGHT.
+% Execution halted at: MARSH_TESTFUNCTION   14 /home/andrew/foxsi/ebtel-hxr-master/mpfit/marsh_testfunction.pro
+%                      EX_MPFIT_TEST      84 /home/andrew/foxsi/ebtel-hxr-master/mpfit/ex_mpfit_test.pro
+%                      $MAIN$          
+% Program caused arithmetic error: Floating underflow
+% Program caused arithmetic error: Floating illegal operand
