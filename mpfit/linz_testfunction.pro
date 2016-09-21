@@ -9,10 +9,10 @@ fill  = params[1]
 flare_dur = params[2]
 
 ; defaults
-;heat0 = 0.01          	; amplitude of (nano)flare [erg cm^-3 s^-1]
-length = 6.0e9					; loop half-length
-scale_height = 5.e9			; coronal scale height (or any desired height)
-;flare_dur = 500.				; duration of heating event [seconds]
+;heat0 = 0.01       ; amplitude of (nano)flare [erg cm^-3 s^-1]
+length = 6.0e9			; loop half-length
+scale_height = 5.e9		; coronal scale height (or any desired height)
+;flare_dur = 500.		; duration of heating event [seconds]
 
 solar_dx_arcsec = 100.		; Diameter of solar area of interest.
 ; Examples: FOXSI FWHM (5"), NuSTAR pixel (12"), AR size (~60")
@@ -27,10 +27,12 @@ hxr = dem_hxr( logtdem, dem_cm5, area, energy )
 
 ; Instrument-specific stuff goes here.
 instr = 'foxsi2'
-integration = 38.5	; duration of observation
+;integration = 38.5	; duration of observation
 ;;instr = 'nustar'
 count_rate = hxr_counts( energy, hxr, instr=instr, effarea=effarea )
-counts = total( count_rate, 1 )*integration
+
+;Keep counts in units of counts/s/keV
+counts = total( count_rate, 1 );*integration
 obs = keep_it_real( energy, counts, coarse )
 obs[ where(obs lt 0)] = 0.
 
