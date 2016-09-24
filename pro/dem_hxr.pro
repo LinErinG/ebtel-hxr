@@ -17,10 +17,18 @@
 ; KEYWORDS:
 ;
 ; HISTORY:
-;		2015-nov-12		LG	Wrote routine
+;2015-nov-12		LG	Wrote routine
+;2016-sep-24            AJM     Correct treatment of coronal and TR DEMs
 ;-
 
-FUNCTION DEM_HXR, logte, dem, area, energy, _extra=_extra
+FUNCTION DEM_HXR, logte, dem_cor=dem_cor, dem_tr=dem_tr, pix_cm, length, $
+                  scale_height=scale_height, energy, _extra=_extra
+
+default, scale_height, 5.e9
+if ~keyword_set(dem_cor) and ~keyword_set(dem_tr) then begin
+   print, "DEM input required."
+   return, 0
+endif
 
 ; Various styles of energy arrays for use later
 energy_edges  = findgen(1000)/50.+2
@@ -31,10 +39,20 @@ nEn = n_elements( energy_mid )
 
 ; Compute EM in cm^-3 by multiplying DEM by temperature bin width and emitting area.
 dlogt = average( get_edges( logte, /width ) )	; binwidth assuming evenly-spaced logT bins
-em_cm3 = dem * area  * alog(10.) * 10.^logte * dlogt	; EM in each T bin
+; Ensure time averaged DEM
+if keyword_set(dem_cor) then if size(dem_cor, /n_dimensions) gt 1 then dem_cor = double( average( dem_cor, 1 ) ) else dem_cor = dem_cor
+if keyword_set(dem_tr) then if size(dem_tr, /n_dimensions) gt 1 then dem_tr = double( average( dem_tr, 1 ) ) else dem_tr = dem_tr
+
+if keyword_set(dem_tr) then begin
+   if ~keyword_set(dem_cor) then em_cm3 = 0.5 * dem_tr * pix_cm^2
+   if keyword_set(dem_cor) then $
+      em_cm3 = dem_cor * pix_cm^2 * scale_height / (2 * length) + 0.5 * dem_tr * pix_cm^2
+endif else em_cm3 = dem_cor * pix_cm^2 * scale_height / (2 * length)
+
+em_cm3_bin = em_cm3 * alog(10.) * 10.^logte * dlogt	; EM in each T bin
 
 ; Convert variables to units needed for F_VTH.  EM in 10^49 cm^-3, T in keV
-em_49 = em_cm3/1.d49
+em_49 = em_cm3_bin/1.d49
 t_keV = 10.^logte / 11.6 / 1.d6		; 1/11.6 is Boltzmann constant in keV/MK
 nT   = n_elements(logte)
 

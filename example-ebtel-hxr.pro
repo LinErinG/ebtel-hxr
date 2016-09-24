@@ -14,24 +14,24 @@ flare_dur = 500.	; duration of heating event [seconds]
 
 solar_dx_arcsec = 60.	; Diameter of solar area of interest.
 ; Examples: FOXSI FWHM (5"), NuSTAR pixel (12"), AR size (~60")
-solar_dx_cm  = solar_dx_arcsec*0.725d8		; Instrument resolution, centimeters
-area = solar_dx_cm^2 * scale_height / 2 / length	; "effective" area of emitting plasma
+pix_cm  = solar_dx_arcsec*0.725d8		; Observing area, centimeters
 
 fill=1.		; filling factor
 
 ;; Next are the three main functions.
 
-;; First is just a wrapper for EBTEL.
+;; First is just a wrapper for EBTEL. Returns *time-averaged* DEMs
 dem_cm5 = run_ebtel( time, heat0=heat0, length=length, t_heat=flare_dur, te=te, dens=dens, $
-logtdem=logtdem, avg_dem_cm5_cor=avg_dem_cm5_cor)
+logtdem=logtdem, dem_cm5_cor=dem_cm5_cor, dem_cm5_tr=dem_cm5_tr)
 
 ; put filling factor outside EBTEL wrapper so we can test several filling factors 
 ; without rerunning EBTEL.
 dem_cm5 *= fill		
-if exist( avg_dem_cm5_cor ) then avg_dem_cm5_cor *= fill
+dem_cm5_cor *= fill
+dem_cm5_tr *= fill
 
 ;; Next, calculate HXR flux based on EBTEL DEM and relevant area
-hxr = dem_hxr( logtdem, dem_cm5, area, energy )
+hxr = dem_hxr( logtdem, dem_cor=dem_cm5_cor, dem_tr=dem_cm5_tr, pix_cm, length, energy )
 
 ;; Fold through HXR instrument response (example NuSTAR)
 instr = 'nustar'
@@ -44,9 +44,9 @@ counts = total( count_rate, 1 )*integration
 obs = keep_it_real( energy, counts, coarse )
 obs[ where(obs lt 0)] = 0.
 
-;
+;*
 ; All of the following is to plot intermediate variables and end results.
-;
+;*
 
 popen, 'ebtel-plots', xsi=10, ysi=8, /land	; for printing plots.  Needs special library.
 
@@ -59,11 +59,13 @@ plot, time, dens, xtit='Time [s]', ytit='Density [cm!U-3!N]', charsi=ch, thick=4
 plot, logtdem, dem_cm5/length/2, xtit='Log T [log MK]', ytit='DEM [cm!U-6!N K!U-1!N]', $
 	/ylog, xra=[5.5,7.5], yra=[1.e8,1.e14], charsi=ch, $
 	thick=4, title='Time-averaged DEM'
-oplot, logtdem, avg_dem_cm5_cor/length/2, line=2, thick=2
+oplot, logtdem, dem_cm5_cor/length/2, line=2, thick=2
 al_legend, ['Corona + TR','Corona only'], line=[0,2], thick=4, /top, /right, box=0
 
-em_log_cm3 = dem_cm5 * area * alog(10.) * 10.^logtdem
-em_log_cm3_cor = avg_dem_cm5_cor * area * alog(10.) * 10.^logtdem
+em_cm3_cor = dem_cm5_cor * pix_cm^2 * scale_height / (2 * length)
+em_cm3 = em_cm3_cor + 0.5 * dem_cm5_tr * pix_cm^2
+em_log_cm3 = em_cm3 * alog(10.) * 10.^logtdem
+em_log_cm3_cor = em_cm3_cor * alog(10.) * 10.^logtdem
 
 ; EM
 
@@ -109,6 +111,6 @@ al_legend, strtrim(logtdem[sparse],2), col=indgen(n_sparse)*255/n_sparse, $
 
 plot_err, coarse, obs, yerr=sqrt(double(obs)/integration), /xlo, /ylo, xr=[2.,20.], $
 	yr=[1.e0,1.e4], /xsty, psym=10, xtitle='Energy [keV]', ytitle='Counts keV!U-1!N', $
-	charsi=ch, thick=4, title='Binned count spectrum'
+	charsi=ch, thick=4, title='Binned count spectrum for '+strtrim(string(integration),2)+' s'
 
 pclose	; for printing plots.  Needs special library.
