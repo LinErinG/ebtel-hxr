@@ -1,22 +1,18 @@
 ;; testing out MPFIT for our EBTEL-FOXSI-NuSTAR purposes.
 ;; Linz 12/6/2015
 
-
 ; Get the right routines ready. 
-add_path, '~/local-git-repo/ebtel-idl/'				; or wherever your EBTEL codes are
+add_path, '~/ebtel-master'	; or wherever your EBTEL codes are
 add_path, 'pro'
 add_path, 'mpfit'
 
-
 ; Retrieve the measured FOXSI-2 data to compare against.
 restore, 'sav/foxsi2-d6-spex.sav'
-bin = 0.3
-energy = findgen(20./0.3)*bin
+energy = findgen(20./0.3)*0.3
 measured = interpol( spec.spec_p, spec.energy_kev, energy ) / dt
-err = sqrt(measured * dt / bin)
-err[ where( err lt 1. ) ] = 1.		; getting appropriate errors seems to be key!
-i = where( energy gt 5. and energy lt 10. )			; fitting only 5-10 keV
-
+err = sqrt(measured) / dt
+err[ where( err lt 1. ) ] = 1.           ; getting appropriate errors seems to be key!
+i = where( energy gt 5. and energy lt 10. ) ; fitting only 5-10 keV
 
 ; Setup for MPFIT:
 ; Currently the list of parameters is:
@@ -33,26 +29,24 @@ undefine, param
 undefine, constraint
 ; Set up constraint array.
 constraint = replicate({fixed:0, limited:[0,0], limits:[0.0D,0.0D], step:0.0D}, 3)
-constraint[2].fixed=1.							; Fix param[2], i.e. don't fit flare_dur.
-constraint[0].limited=[1,1]					; Flag that we want limits on param[0] (i.e. heat0)
-constraint[0].limits =[0.001,0.1]		; Specify the limits for param[0]
-constraint[0].step = 0.001					; Step size for adjustments to param[0]
-constraint[1].limited=[1,1]					; Flag that we want limits on param[1] (i.e. fill)
-constraint[1].limits =[0.001,1.0]		; Specify the limits for param[1]
-constraint[1].step = 0.001					; Step size for adjustments to param[1]
+constraint[2].fixed=1.		; Fix param[2], i.e. don't fit flare_dur.
+constraint[0].limited=[1,1]	; Flag that we want limits on param[0] (i.e. heat0)
+constraint[0].limits =[0.001,0.1]	; Specify the limits for param[0]
+constraint[0].step = 0.001		; Step size for adjustments to param[0]
+constraint[1].limited=[1,1]		; Flag that we want limits on param[1] (i.e. fill)
+constraint[1].limits =[0.001,1.0]	; Specify the limits for param[1]
+constraint[1].step = 0.001		; Step size for adjustments to param[1]
 ; Do the fit!
 param = mpfitfun('linz_testfunction', energy[i], measured[i], err[i], [0.01,1., 500.], parinfo=constraint)
 ; Best values for heat0 and fill (with flare_dur fixed) are now in PARAM.
 ; Rerun the function to see the expected observation given this best set of variables.
 obs = linz_testfunction( energy, param )
 
-
 ;
-; Make a plot to compare results with the measured values.
-;
-
 ; If desired, save results.
-; save, param, energy, obs, spec, file='foxsi2-heat0-results.sav'
+; save, param, energy, obs, spec, file=instr+'-heat0-results.sav'
+
+; Make a plot to compare results with the measured values.
 
 ;popen, 'foxsi2-heat0-result', xsi=7, ysi=6
 !p.multi=0
