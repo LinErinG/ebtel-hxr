@@ -5,6 +5,7 @@
 
 add_path, '~/local-git-repo/ebtel-idl/'	; or wherever your EBTEL codes are
 add_path, 'pro'
+add_path, 'mpfit'
 
 ;; Set up parameters
 heat0 = 0.01          	; amplitude of (nano)flare [erg cm^-3 s^-1]
@@ -22,7 +23,7 @@ fill=1.		; filling factor
 
 ;; First is just a wrapper for EBTEL. Returns *time-averaged* DEMs
 dem_cm5 = run_ebtel( time, heat0=heat0, length=length, t_heat=flare_dur, te=te, dens=dens, $
-logtdem=logtdem, dem_cm5_cor=dem_cm5_cor, dem_cm5_tr=dem_cm5_tr)
+					 logtdem=logtdem, dem_cm5_cor=dem_cm5_cor, dem_cm5_tr=dem_cm5_tr)
 
 ; put filling factor outside EBTEL wrapper so we can test several filling factors 
 ; without rerunning EBTEL.
@@ -31,7 +32,7 @@ dem_cm5_cor *= fill
 dem_cm5_tr *= fill
 
 ;; Next, calculate HXR flux based on EBTEL DEM and relevant area
-hxr = dem_hxr( logtdem, dem_cor=dem_cm5_cor, dem_tr=dem_cm5_tr, pix_cm, length, energy )
+hxr = dem_hxr( logtdem, pix_cm, length, energy, dem_cor=dem_cm5_cor, dem_tr=dem_cm5_tr )
 
 ;; Fold through HXR instrument response (example NuSTAR)
 instr = 'nustar'
@@ -48,7 +49,7 @@ obs[ where(obs lt 0)] = 0.
 ; All of the following is to plot intermediate variables and end results.
 ;*
 
-popen, 'ebtel-plots', xsi=10, ysi=8, /land	; for printing plots.  Needs special library.
+popen, 'ebtel-plots-'+instr, xsi=10, ysi=8, /land	; for printing plots.  Needs special library.
 
 ; EBTEL OUTPUTS
 
