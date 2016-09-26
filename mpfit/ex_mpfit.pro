@@ -2,6 +2,7 @@
 ;; Linz 12/6/2015
 
 ; Get the right routines ready. 
+add_path, '~/local-git-repo/ebtel-idl/'	; or wherever your EBTEL codes are
 add_path, '~/ebtel-master'	; or wherever your EBTEL codes are
 add_path, 'pro'
 add_path, 'mpfit'
@@ -9,8 +10,8 @@ add_path, 'mpfit'
 ; Retrieve the measured FOXSI-2 data to compare against.
 restore, 'sav/foxsi2-d6-spex.sav'
 energy = findgen(20./0.3)*0.3
-measured = interpol( spec.spec_p, spec.energy_kev, energy ) / dt
-err = sqrt(measured) / dt
+measured = interpol( spec.spec_p, spec.energy_kev, energy )
+err = sqrt(measured)
 err[ where( err lt 1. ) ] = 1.           ; getting appropriate errors seems to be key!
 i = where( energy gt 5. and energy lt 10. ) ; fitting only 5-10 keV
 
@@ -22,23 +23,26 @@ i = where( energy gt 5. and energy lt 10. ) ; fitting only 5-10 keV
 
 ;
 ; Example: Use the linz_tesfunction for MPFIT with heat0 and fill fit.
-; Keep flare_dur as a fixed parameter.
+; Keep flare_dur and loop length as fixed parameters.
 ;
 
 undefine, param
 undefine, constraint
 ; Set up constraint array.
-constraint = replicate({fixed:0, limited:[0,0], limits:[0.0D,0.0D], step:0.0D}, 3)
+constraint = replicate({fixed:0, limited:[0,0], limits:[0.0D,0.0D], step:0.0D}, 4)
+constraint[3].fixed=1.		; Fix param[3], i.e. don't fit loop length.
 constraint[2].fixed=1.		; Fix param[2], i.e. don't fit flare_dur.
+constraint[1].fixed=1.		; Fix param[1], i.e. don't fit filling factor.
 constraint[0].limited=[1,1]	; Flag that we want limits on param[0] (i.e. heat0)
 constraint[0].limits =[0.001,0.1]	; Specify the limits for param[0]
 constraint[0].step = 0.001		; Step size for adjustments to param[0]
-constraint[1].limited=[1,1]		; Flag that we want limits on param[1] (i.e. fill)
-constraint[1].limits =[0.001,1.0]	; Specify the limits for param[1]
-constraint[1].step = 0.001		; Step size for adjustments to param[1]
+;constraint[1].limited=[1,1]		; Flag that we want limits on param[1] (i.e. fill)
+;constraint[1].limits =[0.001,1.0]	; Specify the limits for param[1]
+;constraint[1].step = 0.001		; Step size for adjustments to param[1]
 ; Do the fit!
-param = mpfitfun('linz_testfunction', energy[i], measured[i], err[i], [0.01,1., 500.], parinfo=constraint)
-; Best values for heat0 and fill (with flare_dur fixed) are now in PARAM.
+param = mpfitfun('linz_testfunction', energy[i], measured[i], err[i], [0.01,1.,500.,3.d9], parinfo=constraint)
+; Best values for heat0 (with fill, flare_dur fixed) are now in PARAM.
+
 ; Rerun the function to see the expected observation given this best set of variables.
 obs = linz_testfunction( energy, param )
 

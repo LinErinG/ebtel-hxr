@@ -23,7 +23,7 @@ fill=1.		; filling factor
 
 ;; First is just a wrapper for EBTEL. Returns *time-averaged* DEMs
 dem_cm5 = run_ebtel( time, heat0=heat0, length=length, t_heat=flare_dur, te=te, dens=dens, $
-					 logtdem=logtdem, dem_cm5_cor=dem_cm5_cor, dem_cm5_tr=dem_cm5_tr)
+					 logtdem=logtdem, dem_cor=dem_cm5_cor, dem_tr=dem_cm5_tr)
 
 ; put filling factor outside EBTEL wrapper so we can test several filling factors 
 ; without rerunning EBTEL.
