@@ -1,4 +1,4 @@
-function linz_testfunction, fit_energy, params, instr=instr, scale_height=scale_height
+function linz_testfunction, fit_energy, params, instr=instr, scale_height=scale_height, stop=stop
 
 default, instr, 'foxsi2'	; Must specify if you want NuSTAR.
 
@@ -47,6 +47,8 @@ print, '  flare_dur: ', flare_dur
 print, '  length: ', length
 print
 print
+	
+if keyword_set( stop ) then stop
 	
 return, obs
 	
