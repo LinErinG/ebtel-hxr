@@ -1,7 +1,7 @@
-function foxsi_testfunction, fit_energy, params
+function foxsi_testfunction, fit_energy, params, real=real, logtdem=logtdem, $
+                             dem_cm5=dem_cm5, delay=delay
 
-;stop
-
+default, real, 1 
 ; Params that can be fit are [heat0, fill, flare_dur].  Could also add loop length.
 heat0 = params[0]
 fill  = params[1]
@@ -12,27 +12,30 @@ default, scale_height,  5d9
 inst = 'foxsi2'
 main_dir = '~/foxsi/ebtel-hxr-master/'
 
-solar_dx_arcsec = 100.		; Diameter of solar area of interest.
+solar_dx_arcsec = 60.		; Diameter of solar area of interest.
 ; Examples: FOXSI FWHM (5"), NuSTAR pixel (12"), AR size (~60")
-solar_dx_cm  = solar_dx_arcsec*0.725d8		; Instrument resolution, centimeters
-area = solar_dx_cm^2 * scale_height / 2 / length	; "effective" area of emitting plasma
+pix_cm  = solar_dx_arcsec*0.725d8	; Instrument resolution, centimeters
 
-dem_cm5 = run_ebtel( time, heat0=heat0, length=length, t_heat=flare_dur, te=te, dens=dens, logtdem=logtdem, $
-		 avg_dem_cm5_cor=avg_dem_cm5_cor )
-dem_cm5 *= fill[0]
-hxr = dem_hxr( logtdem, dem_cm5, area, energy )
+if keyword_set(delay) then $
+   nano_repeat, delay=delay, heat0=heat0, length=length, tau=flare_dur, $
+                dem_cor_avg=dem_cm5_cor, dem_tot_avg=dem_cm5, logtdem=logtdem else $
+dem_cm5 = run_ebtel( time, heat0=heat0, length=length, t_heat=flare_dur, $
+                     logtdem=logtdem, dem_cm5_cor=dem_cm5_cor )
+dem_cm5 *= fill
+dem_cm5_cor *= fill
+hxr = dem_hxr( logtdem, dem_cor=dem_cm5_cor, pix_cm, length, energy )
 
 ; Instrument-specific stuff goes here.
 integration = 38.5	; duration of observation
 
 count_rate = hxr_counts( energy, hxr, inst=inst, effarea=effarea, main_dir=main_dir )
-; Main_dir is the home directory of the ebtel-hxr scripts from github,
-; and will likely be different on your machine
-counts = total( count_rate, 1 )*integration
-obs = keep_it_real( energy, counts, coarse )
-obs[ where(obs lt 0)] = 0.
+counts = total( count_rate, 1 )*integration  ; count spectrum in counts/keV
 
-obs = interpol( obs, coarse, fit_energy )
+if keyword_set(real) then begin
+   obs = keep_it_real( energy, counts, coarse, binsize=(fit_energy[1]-fit_energy[0]) )
+   obs[ where(obs lt 0)] = 0.
+   obs = interpol( obs, coarse, fit_energy )
+endif else obs = interpol( counts, energy, fit_energy)
 	
 print
 print
@@ -47,6 +50,4 @@ print
 	
 return, obs
 	
-;stop
-
 end	
