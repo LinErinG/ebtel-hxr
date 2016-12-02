@@ -7,7 +7,17 @@
 ; the FOXSI-2 flight.
 ;
 ; INPUT:
-;	FILTER:		Name of XRT filter to use.  Choices now are 'be_med/open' or 'al_med/open'
+;	FILTER:		Name of XRT filter to use, in all lowercase.  Choices are:
+;				be-thick 
+;				al-thick 
+;				ti-poly 
+;				al-mesh 
+;				al-poly/ti-poly 
+;				c-poly/ti-poly 
+;				be-thin 
+;				be-med 
+;				al-med 
+;				al-poly 
 ;   LOGTE:		log(T) temperature array (temperature measured in Kelvin)
 ;   DEM:		Differential emission measure in units of cm^-5 K^-1 corresponding logte array
 ;	LENGTH:		Loop half length
@@ -21,6 +31,7 @@
 ;
 ;
 ; HISTORY:
+;2016-dec-01		LG	Updated with more XRT responses from the time of the FOXSI flight.
 ;2016-nov-18		LG	Wrote routine
 ;-
 
@@ -32,7 +43,7 @@ default, dem_cor, 0.
 default, dem_tr, 0.
 
 restore, 'sav/XRT_Response.sav'
-i_filter = where( strmid(filter_list,0,2) eq strmid(filter,0,2) )
+i_filter = where( filter_list eq filter )
 
 if i_filter eq -1 then begin
 	print, 'No filter match found.'
