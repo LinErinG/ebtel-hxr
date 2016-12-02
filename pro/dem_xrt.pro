@@ -25,14 +25,22 @@
 ;-
 
 FUNCTION DEM_XRT, filter, logte, length, dem_cor=dem_cor, dem_tr=dem_tr, $
+<<<<<<< HEAD
                   scale_height=scale_height, savdir=savdir, _extra=_extra
+=======
+                  scale_height=scale_height, _extra=_extra
+>>>>>>> origin/working
 
 default, scale_height, 5.e9
 default, dem_cor, 0.
 default, dem_tr, 0.
 
+<<<<<<< HEAD
 default, savdir='~/foxsi/ebtel-hxr-master/sav/'
 restore, savdir+'XRT_Response.sav', /v
+=======
+restore, 'sav/XRT_Response.sav'
+>>>>>>> origin/working
 i_filter = where( strmid(filter_list,0,2) eq strmid(filter,0,2) )
 
 if i_filter eq -1 then begin
