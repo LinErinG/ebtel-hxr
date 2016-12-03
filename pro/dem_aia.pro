@@ -29,7 +29,7 @@ default, scale_height, 5.e9
 default, dem_cor, 0.
 default, dem_tr, 0.
 
-default, savdir='~/foxsi/ebtel-hxr-master/sav/'
+default, savdir, '~/foxsi/ebtel-hxr-master/sav/'
 restore, savdir+'AIA_Response.sav', /v
 chan=where( response.channels eq 'A'+strtrim(wave,2) )
 

@@ -31,7 +31,7 @@ default, scale_height, 5.e9
 default, dem_cor, 0.
 default, dem_tr, 0.
 
-default, savdir='~/foxsi/ebtel-hxr-master/sav/'
+default, savdir, '~/foxsi/ebtel-hxr-master/sav/'
 restore, savdir+'XRT_Response.sav', /v
 i_filter = where( strmid(filter_list,0,2) eq strmid(filter,0,2) )
 
