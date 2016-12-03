@@ -33,7 +33,7 @@ default, dem_tr, 0.
 
 default, savdir, '~/foxsi/ebtel-hxr-master/sav/'
 restore, savdir+'XRT_Response.sav', /v
-i_filter = where( strmid(filter_list,0,2) eq strmid(filter,0,2) )
+i_filter = where( strmid(filter_list,0,9) eq strmid(filter,0,9) )
 
 if i_filter eq -1 then begin
 	print, 'No filter match found.'
