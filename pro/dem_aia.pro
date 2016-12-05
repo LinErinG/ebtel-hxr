@@ -23,13 +23,14 @@
 ;-
 
 FUNCTION DEM_AIA, wave, logte, length, dem_cor=dem_cor, dem_tr=dem_tr, $
-                  scale_height=scale_height, _extra=_extra
+                  scale_height=scale_height, savdir=savdir, _extra=_extra
 
 default, scale_height, 5.e9
 default, dem_cor, 0.
 default, dem_tr, 0.
 
-restore, 'sav/AIA_Response.sav'
+default, savdir, '~/foxsi/ebtel-hxr-master/sav/'
+restore, savdir+'AIA_Response.sav', /v
 chan=where( response.channels eq 'A'+strtrim(wave,2) )
 
 if chan[0] eq -1 then begin
