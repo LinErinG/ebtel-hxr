@@ -36,14 +36,20 @@
 ;-
 
 FUNCTION DEM_XRT, filter, logte, length, dem_cor=dem_cor, dem_tr=dem_tr, $
-                  scale_height=scale_height, _extra=_extra
+                  scale_height=scale_height, savdir=savdir, _extra=_extra
 
 default, scale_height, 5.e9
 default, dem_cor, 0.
 default, dem_tr, 0.
 
+<<<<<<< HEAD
 restore, 'sav/XRT_Response.sav'
 i_filter = where( filter_list eq filter )
+=======
+default, savdir, '~/foxsi/ebtel-hxr-master/sav/'
+restore, savdir+'XRT_Response.sav', /v
+i_filter = where( strmid(filter_list,0,9) eq strmid(filter,0,9) )
+>>>>>>> 9f28201487e0685e116c821be163aecb2774b472
 
 if i_filter eq -1 then begin
 	print, 'No filter match found.'
