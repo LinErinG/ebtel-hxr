@@ -1,7 +1,6 @@
 PRO nano_repeat, length=length, tau=tau, heat0=heat0, delay=delay, nflares=nflares, $
-                 save=save, dem_tot_avg=dem_tot_avg, dem_cor_avg=dem_cor_avg, $
-                 dem_tr_avg=dem_tr_avg, logtdem=logtdem, plot=plot, time=time, heat=heat, $
-                 heat_bkg=heat_bkg, savefile=savefile
+dem_tot_avg=dem_tot_avg, dem_cor_avg=dem_cor_avg, dem_tr_avg=dem_tr_avg, logtdem=logtdem, $
+plot=plot, time=time, heat_array=heat, heat_bkg=heat_bkg, savefile=savefile, stop=stop
 ;
 ; Routine to compute temperature and density evolution and the time-averaged DEM(T) 
 ; for the last cycle of a sequence of repeating nanoflares
@@ -10,10 +9,9 @@ PRO nano_repeat, length=length, tau=tau, heat0=heat0, delay=delay, nflares=nflar
 ; corrected normalization of dem, JAK, 2016 Aug 15
 ; added input keywords, AJM, 2016 Oct 7
 ; changed delay to a float; errors otherwise, AJM, 2016 Nov 9
+; avoid ambiguous keywords: heat to heat_array, deleted save, AJM, 2017 Feb 2
   
-  default, savefile, 'ebtel_output.sav'
-
- ; Set default parameters
+  ; Set default parameters
   default, length, 3.0e9  ;  loop halflength
   default, tau, 100.  ;  nanoflare duration
   default, heat0, 1.5e-1  ;  nanoflare amplitude (maximum heating rate)
@@ -79,10 +77,12 @@ ENDIF
   print, 'T_min =', min(tlast)
   print, 'n_min =', min(nlast)
   print, 'energy flux =', flux_avg
+
+if keyword_set(stop) then STOP
   
-if keyword_set(save) or keyword_set(savefile) then $
+if keyword_set(savefile) then $
  save, file=savefile, logtdem, dem_tot_avg, dem_cor_avg, dem_tr_avg, $
-       timelast, tlast, nlast, time, heat, /verbose
+       timelast, t, tlast, n, nlast, time, heat, /verbose
   
 
 END
