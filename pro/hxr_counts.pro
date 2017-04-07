@@ -14,7 +14,8 @@ instr_area = interpol( reform(dat.field1[1,*]), reform(dat.field1[0,*]), energy 
 if file eq 'data/foxsi-smex-effarea.txt' then instr_area /= 2.
 count_rate = hxr
 nT = (size(hxr))[1]
-for i=0, nT-1 do count_rate[i,*] *= instr_area[i,*]
+if n_elements(size(hxr,/dimensions)) gt 1 then for i=0,nT-1 do count_rate[i,*] *= instr_area else $ 
+count_rate *= instr_area
 
 if keyword_set( stop ) then stop
 
