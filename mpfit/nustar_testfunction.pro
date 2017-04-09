@@ -35,7 +35,7 @@ if keyword_set(delay) then $
    _extra=_extra else $
    dem_cm5_tot = run_ebtel( time, heat0=heat0, length=length, t_heat=flare_dur,$
    logtdem=logtdem, dem_cm5_cor=dem_cm5_cor, dem_cm5_tr=dem_cm5_tr, $
-   _extra=_extra
+   _extra=_extra)
 endelse
 
 dem_cm5_tr *= fill
@@ -45,8 +45,8 @@ length, energy, inst=inst)
 
 default, resp_dim, 2
 if resp_dim eq 1 then $
-count_rate = hxr_counts( energy, hxr, inst=inst, effarea=effarea, main_dir=main_dir ) else $
-count_rate = hxr_counts_2d( energy, hxr, inst=inst, response=response, main_dir=main_dir )
+count_rate = hxr_counts( energy, hxr, inst=inst, effarea=effarea) else $
+count_rate = hxr_counts_2d( energy, hxr, inst=inst, response=response)
 counts = total( count_rate, 1 )  ; count spectrum in counts/s/keV
 
 if keyword_set(real) then begin
