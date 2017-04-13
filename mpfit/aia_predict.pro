@@ -3,6 +3,7 @@ dns_pred_aia=dns_pred_aia, scaling=scaling, instr=instr, fill=fill
 
 default, scaling, 3   ; scaling*flux is maximum permitted
 default, instr, 'foxsi'
+default, fill, 1.0 
 
 savdir = '~/foxsi/ebtel-hxr-master/sav/'
 default, length, 6d9  ; loop length in cm 

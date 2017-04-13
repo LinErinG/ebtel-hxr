@@ -2,6 +2,7 @@ FUNCTION xrt_predict, logtdem, dem_cm5_cor, dem_cm5_tr, length=length, $
 dns_pred_xrt=dns_pred_xrt, scaling=scaling, fill=fill
 
 default, scaling, 3   ; scaling*flux is maximum permitted
+default, fill, 1.0
 
 savdir = '~/foxsi/ebtel-hxr-master/sav/'
 default, length, 6d9  ; loop length in cm
