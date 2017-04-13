@@ -31,6 +31,7 @@ FUNCTION DEM_XRT, filter, logte, length, dem_cor=dem_cor, dem_tr=dem_tr, $
 default, scale_height, 5.e9
 default, dem_cor, 0.
 default, dem_tr, 0.
+default, fill, 1.0
 
 default, savdir, '~/foxsi/ebtel-hxr-master/sav/'
 restore, savdir+'XRT_Response.sav' ;, /v
