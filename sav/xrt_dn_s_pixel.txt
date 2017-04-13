@@ -1,0 +1,10 @@
+be-thick		0.00835
+al-thick		0.342	
+ti-poly			170
+al-mesh			365
+al-poly/ti-poly		95.3
+c-poly/ti-poly		74.8
+be-thin			47.9
+be-med			8.51
+al-med			4.00
+al-poly			325
