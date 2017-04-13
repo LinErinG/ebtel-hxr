@@ -29,9 +29,9 @@ PRO foxsi_chisq_plus, npix=npix, delay=delay, length=length, save=save
 ; .r
  FOR i=0, n_elements(fill)-1 DO BEGIN  ; Loop over fill factor 
     param[1] = fill[i]
-    FOR j=0,n_elements(npix)-1 DO BEGIN  ; Loop over heat input
+    FOR j=0, npix-1 DO BEGIN  ; Loop over heat input
        param[0] = heat0[j]
-       FOR k=0, n_elements(npix)-1 DO BEGIN  ; Loop over flare duration
+       FOR k=0, npix-1 DO BEGIN  ; Loop over flare duration
           param[2] = flare_dur[k]
 
           obs = foxsi_testfunction( energy, param, length=length, logtdem=logtdem,$
@@ -41,11 +41,9 @@ PRO foxsi_chisq_plus, npix=npix, delay=delay, length=length, save=save
 
           for n=0,(n_elements(obs)-10)/10.-1 do obs_coarse[n] = average(obs[n*10:n*10+10])
 
-          aia_filter[i,j,k] = aia_predict(logtdem, dem_cm5_tr=dem_cm5_tr, $
-          dem_cm5_cor=dem_cm5_cor, dns_pred_aia=dns_pred_aia)
+          aia_filter[i,j,k] = aia_predict(logtdem, dem_cm5_cor, dem_cm5_tr, dns_pred_aia=dns_pred_aia)
 
-          xrt_filter[i,j,k] = xrt_predict(logtdem, dem_cm5_tr=dem_cm5_tr, $
-          dem_cm5_cor=dem_cm5_cor, dns_pred_xrt=dns_pred_xrt)
+          xrt_filter[i,j,k] = xrt_predict(logtdem, dem_cm5_cor, dem_cm5_tr, dns_pred_xrt=dns_pred_xrt)
 
           chisq[i,j,k] = total( (spec.spec_p[e]*ratio-obs_coarse[e])^2 / spec.spec_p[e]*ratio )
        ENDFOR
@@ -54,10 +52,8 @@ PRO foxsi_chisq_plus, npix=npix, delay=delay, length=length, save=save
 ; end
 
  chisq_tot = chisq
- IF keyword_set(save) THEN BEGIN
-    if keyword_set(delay) then $
-       save, chisq_tot, aia_filter, xrt_filter, file='chisq_plus_foxsi'+strtrim(fill_ind,2)+'_delay'+strtrim(fix(delay),2)+'_new.sav', /verbose else $
-       save, chisq_tot, aia_filter, xrt_filter, file='chisq_plus_foxsi'+strtrim(fill_ind,2)+'_new.sav', /verbose
- ENDIF
+ IF keyword_set(save) THEN $
+ save, chisq_tot, aia_filter, xrt_filter, file='chisq_plus_foxsi'+strtrim(fill_ind,2)+'_delay'+strtrim(fix(delay),2)+'_new.sav', /verbose 
+
 
 END
