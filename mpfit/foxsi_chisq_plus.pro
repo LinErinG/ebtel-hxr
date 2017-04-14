@@ -1,4 +1,4 @@
-PRO foxsi_chisq_plus, npix=npix, delay=delay, length=length, save=save
+PRO foxsi_chisq_plus, npix=npix, delay=delay, length=length, _extra=_extra, save=save
 
 ; Restore FOXSI AR count spectra, in counts/keV
  restore, '~/foxsi/ebtel-hxr-master/sav/foxsi2-d6-spex.sav', /v
@@ -16,7 +16,7 @@ PRO foxsi_chisq_plus, npix=npix, delay=delay, length=length, save=save
  default, npix, 50
  heat0 = [findgen(npix)+1]*2d-3*(50./npix)
  flare_dur = [findgen(npix)+1]*10*(50./npix)
- default, delay, 10000
+ default, delay, 0
 
  param = fltarr(4)
  param[3] = delay
@@ -35,15 +35,15 @@ PRO foxsi_chisq_plus, npix=npix, delay=delay, length=length, save=save
           param[2] = flare_dur[k]
 
           obs = foxsi_testfunction( energy, param, length=length, logtdem=logtdem,$
-          dem_cm5_tr=dem_cm5_tr, dem_cm5_cor=dem_cm5_cor, /ebtelplus)
+          dem_cm5_tr=dem_cm5_tr, dem_cm5_cor=dem_cm5_cor, _extra=_extra)
 
           obs_coarse = spec.spec_p
 
           for n=0,(n_elements(obs)-10)/10.-1 do obs_coarse[n] = average(obs[n*10:n*10+10])
 
-          aia_filter[i,j,k] = aia_predict(logtdem, dem_cm5_cor, dem_cm5_tr, dns_pred_aia=dns_pred_aia)
+          aia_filter[i,j,k] = aia_predict(logtdem, dem_cm5_cor, dem_cm5_tr)
 
-          xrt_filter[i,j,k] = xrt_predict(logtdem, dem_cm5_cor, dem_cm5_tr, dns_pred_xrt=dns_pred_xrt)
+          xrt_filter[i,j,k] = xrt_predict(logtdem, dem_cm5_cor, dem_cm5_tr)
 
           chisq[i,j,k] = total( (spec.spec_p[e]*ratio-obs_coarse[e])^2 / spec.spec_p[e]*ratio )
        ENDFOR
@@ -53,7 +53,9 @@ PRO foxsi_chisq_plus, npix=npix, delay=delay, length=length, save=save
 
  chisq_tot = chisq
  IF keyword_set(save) THEN $
- save, chisq_tot, aia_filter, xrt_filter, file='chisq_plus_foxsi'+strtrim(fill_ind,2)+'_delay'+strtrim(fix(delay),2)+'_new.sav', /verbose 
+ save, chisq_tot, aia_filter, xrt_filter, $
+file='chisq_plus_foxsi'+strtrim(fill_ind,2)+'_delay'+strtrim(fix(delay),2)+'_length'+strtrim(string(length, FORMAT='(E11.1)'),2)+$
+'_new.sav', /verbose 
 
 
 END

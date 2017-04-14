@@ -33,7 +33,7 @@ if keyword_set(delay) then $
    nano_repeat, delay=delay, heat0=heat0, length=length, tau=flare_dur, $
    dem_cor_avg=dem_cm5_cor, dem_tr_avg=dem_cm5_tr, logtdem=logtdem, $
    _extra=_extra else $
-   dem_cm5_tot = run_ebtel( time, heat0=heat0, length=length, $
+   dem_cm5_tot = run_ebtel( time=time, heat0=heat0, length=length, $
    t_heat=flare_dur, logtdem=logtdem, dem_cm5_cor=dem_cm5_cor, dem_cm5_tr=dem_cm5_tr,_extra=_extra )
 endelse
 
