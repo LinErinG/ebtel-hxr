@@ -1,6 +1,6 @@
 PRO nano_repeat, length=length, tau=tau, heat0=heat0, delay=delay, nflares=nflares, $
 dem_tot_avg=dem_tot_avg, dem_cor_avg=dem_cor_avg, dem_tr_avg=dem_tr_avg, logtdem=logtdem, $
-plot=plot, time=time, heat_array=heat, heat_bkg=heat_bkg, savefile=savefile, stop=stop
+plot=plot, time=time, heat_array=heat_array, heat_bkg=heat_bkg, savefile=savefile, stop=stop
 ;
 ; Routine to compute temperature and density evolution and the time-averaged DEM(T) 
 ; for the last cycle of a sequence of repeating nanoflares
@@ -10,6 +10,7 @@ plot=plot, time=time, heat_array=heat, heat_bkg=heat_bkg, savefile=savefile, sto
 ; added input keywords, AJM, 2016 Oct 7
 ; changed delay to a float; errors otherwise, AJM, 2016 Nov 9
 ; avoid ambiguous keywords: heat to heat_array, deleted save, AJM, 2017 Feb 2
+; added compile command for ebtel, AJM, 2017 Apr 20
   
   ; Set default parameters
   default, length, 3.0e9  ;  loop halflength
@@ -20,19 +21,21 @@ plot=plot, time=time, heat_array=heat, heat_bkg=heat_bkg, savefile=savefile, sto
 
   hcorona = 5.e9  ;  vertical thickness of corona
   default, heat_bkg, 1.e-5  ;  background heating rate
-  delay = float(delay)  ; Int delay can cause error
+  delay = float(round(delay))  ; Int delay can cause error (but so can float!)
 
   duration = nflares*delay 
   time = findgen(duration)
   heat = fltarr(duration)
   tauhalf = tau/2
   
-  for i = 0, tauhalf do heat(i) = heat0*time(i)/tauhalf
-  for i = tauhalf+1, tau do heat(i) = heat0*(tau - time(i))/tauhalf
+  for i = 0, round(tauhalf) do heat(i) = heat0*time(i)/tauhalf
+  for i = round(tauhalf)+1, round(tau) do heat(i) = heat0*(tau - time(i))/tauhalf
 
   for i = 1, nflares-1 do heat(i*delay:(i+1)*delay-1) = heat(0:delay-1)
   
   heat = heat + heat_bkg
+
+  resolve_routine, 'ebtel2', /compile
     
 ;  ebtel2, time, heat, length, t, n, p, v, ta, na, pa, c11, dem_tr, dem_cor, logtdem, /classical
   ebtel2, time, heat, length, t, n, p, v, ta, na, pa, c11, dem_tr, dem_cor, logtdem

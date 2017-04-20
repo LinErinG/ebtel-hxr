@@ -28,7 +28,7 @@
 ;dem_cor and dem_tr, and header
 ;2017-feb-16            AJM Changed energy arrays to match 2D
 ;responses and added instrument keyword
-;-
+;2017-apr-20            AJM Updated NuSTAR earray (dE=0.04 keV)
 
 FUNCTION DEM_HXR, logte, pix_cm, length, energy, dem_cor=dem_cor, dem_tr=dem_tr, $
 scale_height=scale_height, instr=instr, _extra=_extra
@@ -45,7 +45,7 @@ default, dem_tr, 0.
 
 ; Choose energy arrays to match instrument 2D response
 if instr eq 'foxsi' or instr eq 'foxsi2' then energy_edges  = findgen(201)/10.+1.95
-if instr eq 'nustar' then energy_edges = findgen(43)/5.+1.6
+if instr eq 'nustar' then energy_edges = findgen(212)/25.+1.6
 energy_edges2 = get_edges( energy_edges, /edges_2 )	; needed format for f_vth
 energy_mid = get_edges( energy_edges, /mean )
 energy_wid = average( get_edges( energy_edges, /width ) )
