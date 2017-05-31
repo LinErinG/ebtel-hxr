@@ -1,6 +1,7 @@
 PRO calc_stats_obs_table, obs_table, obs_chisq=obs_chisq, obs_likel=obs_likel, $
 dofill=dofill, nfill=nfill, minfill=minfill, maxfill=maxfill, fill=fill, $
-obs_table_fill=obs_table_fill, inst=inst, region=region
+obs_table_fill=obs_table_fill, inst=inst, region=region, normalize=normalize, $
+stop=stop, norm_array=norm_array, reduced_chisq=reduced_chisq
 
 IF inst eq 'foxsi' THEN BEGIN
 restore, '~/foxsi/ebtel-hxr-master/sav/foxsi2-d6-spex.sav', /v
@@ -55,6 +56,7 @@ IF keyword_set(dofill) THEN BEGIN
 ENDIF ELSE BEGIN
    obs_chisq = fltarr(s0, s1, s2)
    obs_likel = obs_chisq
+   norm_array = obs_chisq
 ENDELSE   
 
 FOR i=0, s0-1 DO BEGIN
@@ -70,11 +72,18 @@ FOR i=0, s0-1 DO BEGIN
          print, 'Chi-squared = '
          print, obs_chisq[i,j,k,m]
             ENDFOR
-         ENDIF ELSE $
-            obs_chisq[i,j,k] = total( (sarray[ec]-obs_table[i,j,k,ec])^2 / (sarray[ec]/efactor))
+         ENDIF ELSE BEGIN
+            IF keyword_set(normalize) THEN BEGIN
+               norm_array[i,j,k] = total(sarray[ec]) / total(obs_table[i,j,k,ec])
+               obs_chisq[i,j,k] = total( (sarray[ec]-norm_array[i,j,k]*obs_table[i,j,k,ec])^2 / (sarray[ec]/efactor))
+            ENDIF ELSE $
+               obs_chisq[i,j,k] = total( (sarray[ec]-obs_table[i,j,k,ec])^2 / (sarray[ec]/efactor))
+         ENDELSE
       ENDFOR
    ENDFOR
 ENDFOR
+
+reduced_chisq = obs_chisq / (n_elements(ec)-4)
 
 ; Likelihood
 el = where(earray ge min(erange) and earray le max(erange))
@@ -96,9 +105,17 @@ FOR i=0, s0-1 DO BEGIN
          ENDIF ELSE BEGIN
             ptot = 1
             FOR l=0, n_elements(el)-1 DO BEGIN
+               IF keyword_set(normalize) THEN BEGIN
+                  IF i eq 60 and j eq 5 and k eq 98 then STOP
+                  norm_p = total(sarray[el]) / total(obs_table[i,j,k,el])
+                  p = poisson_table(norm_p * obs_table[i,j,k,el[l]] * efactor, sarray[el[l]] * efactor,$ 
+                     ploose=ploose, pfine=pfine)
+                  ptot *= p
+               ENDIF ELSE BEGIN
                p = poisson_table(obs_table[i,j,k,el[l]] * efactor, sarray[el[l]] * efactor,$ 
-               ploose=ploose, pfine=pfine)
+                  ploose=ploose, pfine=pfine)
                ptot *= p
+               ENDELSE
             ENDFOR
             obs_likel[i,j,k] = ptot
          ENDELSE
@@ -106,6 +123,7 @@ FOR i=0, s0-1 DO BEGIN
    ENDFOR
 ENDFOR
 
-;save, obs_table_fill, obs_likel, obs_chisq, file='foxsi_obs_table_stats_nfill.sav'
+if keyword_set(stop) then stop
+
 
 end
