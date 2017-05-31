@@ -1,6 +1,6 @@
 function nustar_testfunction, fit_energy, params, length=length, real=real, $
 logtdem=logtdem, dem_cm5_cor=dem_cm5_cor, dem_cm5_tr=dem_cm5_tr, $
-resp_dim=resp_dim, ebtelplus=ebtelplus, silent=silent, _extra=_extra
+resp_dim=resp_dim, ebtelplus=ebtelplus, silent=silent, region=region, _extra=_extra
 
 ; Params that can be fit are [heat0, fill, flare_dur, delay].  Loop
 ; length fixed.
@@ -46,7 +46,7 @@ length, energy, inst=inst)
 default, resp_dim, 2
 if resp_dim eq 1 then $
 count_rate = hxr_counts( energy, hxr, inst=inst, effarea=effarea) else $
-count_rate = hxr_counts_2d( energy, hxr, inst=inst, response=response)
+count_rate = hxr_counts_2d( energy, hxr, inst=inst, response=response, region=region)
 counts = total( count_rate, 1 )  ; count spectrum in counts/s/keV
 
 if keyword_set(real) then begin

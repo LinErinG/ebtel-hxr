@@ -1,5 +1,5 @@
 FUNCTION xrt_predict, logtdem, dem_cm5_cor, dem_cm5_tr, length=length, $
-dns_pred_xrt=dns_pred_xrt, scaling=scaling, fill=fill
+dns_pred_xrt=dns_pred_xrt, scaling=scaling, fill=fill, _extra=_extra
 
 default, scaling, 3   ; scaling*flux is maximum permitted
 default, fill, 1.0
@@ -14,7 +14,7 @@ dns_pred_xrt = fltarr(n_elements(filter_list))
 
 for j=0, n_elements(filter_list)-1 do $
 dns_pred_xrt[j] = dem_xrt(filter_list[j], logtdem, length, $
-dem_cor=dem_cm5_cor, dem_tr=dem_cm5_tr, fill=fill)
+dem_cor=dem_cm5_cor, dem_tr=dem_cm5_tr, fill=fill, _extra=_extra)
 
 ratio = dns_pred_xrt / dns_obs_xrt[1,*]
 print, 'Ratios of XRT predicted to observed are '

@@ -24,7 +24,7 @@
 ;-
 
 FUNCTION DEM_AIA, wave, logte, length, dem_cor=dem_cor, dem_tr=dem_tr, $
-                  scale_height=scale_height, savdir=savdir, fill=fill
+scale_height=scale_height, savdir=savdir, fill=fill, coronal=coronal
 
 default, scale_height, 5.e9
 default, dem_cor, 0.
@@ -45,6 +45,7 @@ if ~keyword_set(dem_cor) and ~keyword_set(dem_tr) then begin
    return, 0
 endif
 
+if keyword_set(coronal) then dem_tr = 0 
 
 ; Compute EM in cm^-3 by multiplying DEM by temperature bin width and emitting area.
 dlogt = average( get_edges( logte, /width ) )	; binwidth assuming evenly-spaced logT bins

@@ -1,11 +1,3 @@
-; Get spatial regions of NuSTAR AR spectra  
-restore, file='~/nustar/solar/20141101_data/nsigh_nov14-master/out_files/roi_no14.dat', /v
-print, xcsp, ycsp, wid
-nr = n_elements(rnm)
-region = 0 
-xrange=xcsp[region]+0.5*wid*[-1,1]
-yrange=ycsp[region]+0.5*wid*[-1,1]
-
 ; Download AIA data
 ; start/end of NuSTAR P1
 ;cd, '~/nustar/solar/obs2/aia_orb1/'
@@ -17,35 +9,49 @@ yrange=ycsp[region]+0.5*wid*[-1,1]
 ;files = file_search('*.fits')
 ;aia_prep, files, -1, /do_write_fits
 
-; Obtain observed AIA counts in spectral region of interest during
-; integrated observation time 
+; Get spatial regions of NuSTAR AR spectra  
+restore, file='~/nustar/solar/20141101_data/nsigh_nov14-master/out_files/roi_no14.dat', /v
+print, xcsp, ycsp, wid
+nr = n_elements(rnm)
 aia_dir = '~/nustar/solar/obs2/aia_orb1/'
-wave = ['94', '131', '171', '193', '211', '304', '335']  ;AIA EUV wavelengths
+wave = ['94', '131', '171', '193', '211', '304', '335'] ;AIA EUV wavelengths
+dns_obs_aia = fltarr(nr, n_elements(wave))
 dn_obs  = fltarr(n_elements(wave))
 exptime = fltarr(n_elements(wave)) 
 nf = fltarr(n_elements(wave)) 
 
 .r
-FOR i=0, n_elements(wave)-1 DO BEGIN
-   afiles = file_search(aia_dir+'AIA*'+wave[i]+'.fits')  ; Use Level 1.5 
- ; Read in one full file 
-   read_sdo, afiles[0], index, data
+FOR region=0, 4 DO BEGIN
+   xrange=xcsp[region]+0.5*wid*[-1,1]
+   yrange=ycsp[region]+0.5*wid*[-1,1]
+
+; Obtain observed AIA counts in spectral region of interest during
+; integrated observation time 
+   FOR i=0, n_elements(wave)-1 DO BEGIN
+      afiles = file_search(aia_dir+'AIA*'+wave[i]+'.fits') ; Use Level 1.5 
+                                ; Read in one full file 
+      read_sdo, afiles[0], index, data
 ; Convert x, y range to AIA pixel values using header
-   xc_pix = round(index(0).crpix1-1)
-   yc_pix = round(index(0).crpix2-1)
-   aia_pix_size = index(0).cdelt1
-   pixx = round( xc_pix + xrange / aia_pix_size )
-   pixy = round( yc_pix + yrange / aia_pix_size )
-   print, pixx, pixy 
+      xc_pix = round(index(0).crpix1-1)
+      yc_pix = round(index(0).crpix2-1)
+      aia_pix_size = index(0).cdelt1
+      pixx = round( xc_pix + xrange / aia_pix_size )
+      pixy = round( yc_pix + yrange / aia_pix_size )
+      print, pixx, pixy 
 ;Read in remaining files, AR field-of-view only
-   read_sdo, afiles, index, data, min(pixx), min(pixy), max(pixx)-min(pixx), max(pixy)-min(pixy)
-   nf[i] = (size(data))[3]
-   exptime[i] = total(index.exptime)
-   dn_obs[i] = total(data)
+      read_sdo, afiles, index, data, min(pixx), min(pixy), max(pixx)-min(pixx), max(pixy)-min(pixy)
+      nf[i] = (size(data))[3]
+      exptime[i] = total(index.exptime)
+      dn_obs[i] = total(data)
+   ENDFOR
+   stop
+   dns_obs_aia[region,*] = dn_obs / exptime / (max(pixx)-min(pixx)) / (max(pixy)-min(pixy))
 ENDFOR
 end
 
-print, dn_obs 
+save, dns_obs_aia, file='~/foxsi/ebtel-hxr-master/sav/aia_dn_s_pixel_nustar_regions.sav'
+
+
 
 ; Calculate predicted AIA counts in spectral region of interest during
 ; integrated observation time

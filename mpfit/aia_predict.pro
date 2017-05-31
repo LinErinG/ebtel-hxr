@@ -1,5 +1,6 @@
 FUNCTION aia_predict, logtdem, dem_cm5_cor, dem_cm5_tr, length=length, $
-dns_pred_aia=dns_pred_aia, scaling=scaling, instr=instr, fill=fill
+dns_pred_aia=dns_pred_aia, scaling=scaling, instr=instr, region=region, $
+fill=fill, _extra=_extra
 
 default, scaling, 3   ; scaling*flux is maximum permitted
 default, instr, 'foxsi'
@@ -13,8 +14,12 @@ IF instr eq 'foxsi' THEN BEGIN
    dns_obs_aia = rd_tfile(savdir+'aia_dn_s_pixel.txt',7,-1)
    dns_obs_aia = average(float(dns_obs_aia[1:*,*]),2)
 ENDIF ELSE IF instr eq 'nustar' THEN BEGIN
-   restore, savdir+'aia_dn_s_pixel_nustar.sav'
-   dns_obs_aia = [dns_obs_aia[0:4],dns_obs_aia[6]]
+   restore, savdir+'aia_dn_s_pixel_nustar_regions.sav'
+   IF ~keyword_set(region) THEN BEGIN
+      print, 'NuSTAR region must be specified'
+      return
+   ENDIF
+   dns_obs_aia = [dns_obs_aia[region,0:4],dns_obs_aia[region,6]]
 ENDIF
 
 wave = [94, 131, 171, 193, 211, 335]
@@ -22,7 +27,7 @@ dns_pred_aia = float(wave)
 
 for i=0, n_elements(wave)-1 do $
 dns_pred_aia[i] = dem_aia(wave[i], logtdem, length, $
-dem_cor=dem_cm5_cor, dem_tr=dem_cm5_tr, fill=fill)
+dem_cor=dem_cm5_cor, dem_tr=dem_cm5_tr, fill=fill, _extra=_extra)
 
 ratio = dns_pred_aia / dns_obs_aia 
 print, 'Ratios of AIA predicted to observed are '

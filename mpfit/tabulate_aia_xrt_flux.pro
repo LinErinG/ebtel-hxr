@@ -1,5 +1,5 @@
-PRO tabulate_aia_xrt_flux, length=length, npix=npix, heat_range=heat_range, $
-dur_range=dur_range, delay_range = delay_range, savefile=savefile, _extra=_extra
+PRO tabulate_aia_xrt_flux, length=length, npix=npix, heat_range=heat_range, instr=instr, $
+dur_range=dur_range, delay_range = delay_range, savefile=savefile, region=region, _extra=_extra
 
 default, length, 6d9
 default, npix, 10
@@ -34,13 +34,16 @@ FOR i=0, n_elements(heat0)-1 DO BEGIN
 
             spawn, 'rm '+main_dir+prefix+'*'
 
-            aia_filter[i,j,k] = aia_predict(logtdem, dem_cor_avg, dem_tr_avg, fill=1, dns_pred_aia=dns_pred_aia)
+            aia_filter[i,j,k] = aia_predict(logtdem, dem_cor_avg, dem_tr_avg, length=length, fill=1.0, $
+                                   dns_pred_aia=dns_pred_aia, instr=instr, region=region, _extra=_extra)
             aia_table[i,j,k,*] = dns_pred_aia
-            xrt_filter[i,j,k] = xrt_predict(logtdem, dem_cor_avg, dem_tr_avg, fill=1, dns_pred_xrt=dns_pred_xrt)
+            IF instr eq 'foxsi' THEN BEGIN
+            xrt_filter[i,j,k] = xrt_predict(logtdem, dem_cor_avg, dem_tr_avg, length=length, fill=1.0, $
+                                   dns_pred_xrt=dns_pred_xrt, _extra=_extra)
             xrt_table[i,j,k,*] = dns_pred_xrt
-
+            ENDIF
          ENDFOR
-    ENDFOR
+   ENDFOR
 ENDFOR
 
 save, heat0, flare_dur, delay, aia_filter, xrt_filter, aia_table, xrt_table, file=savefile

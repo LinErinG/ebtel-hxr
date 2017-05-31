@@ -1,5 +1,5 @@
 PRO tabulate_ebtel_runs, inst=inst, length=length, npix=npix, heat_range=heat_range, $
-dur_range=dur_range, delay_range = delay_range, savefile=savefile, _extra=_extra
+dur_range=dur_range, delay_range = delay_range, savefile=savefile, region=region, _extra=_extra
 
 IF inst eq 'foxsi' THEN BEGIN
 restore, '~/foxsi/ebtel-hxr-master/sav/foxsi2-d6-spex.sav'
@@ -31,15 +31,18 @@ FOR i=0, n_elements(heat0)-1 DO BEGIN
          param = [heat0[i], 1.0, flare_dur[j], delay[k]]
 ;         print, param
          
-         if inst eq 'foxsi' then obs = foxsi_testfunction(spec.energy_kev, param, /ebtelplus, _extra=_extra)
-         if inst eq 'nustar' then obs = nustar_testfunction(engs, param, /ebtelplus, _extra=_extra)
+         if delay[k] lt 5000 then ebtelplus=1 else ebtelplus=0
+         if inst eq 'foxsi' then obs = foxsi_testfunction(spec.energy_kev, param, $
+                                                          length=length, ebtelplus=ebtelplus, _extra=_extra)
+         if inst eq 'nustar' then obs = nustar_testfunction(engs, param, ebtelplus=ebtelplus, region=region, $
+                                                            length=length, _extra=_extra)
          obs_table[i,j,k,*] = obs
-
+         
       ENDFOR
    ENDFOR
 ENDFOR
 
-save, heat0, flare_dur, delay, obs_table, file=savefile
+if keyword_set(savefile) then save, heat0, flare_dur, delay, obs_table, file=savefile
 
 
 END

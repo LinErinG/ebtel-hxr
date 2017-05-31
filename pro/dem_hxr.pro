@@ -40,10 +40,13 @@ if ~keyword_set(dem_cor) and ~keyword_set(dem_tr) then begin
    return, 0
 endif
 
+if keyword_set(coronal) then dem_tr = 0 
+
 default, dem_cor, 0.
 default, dem_tr, 0.
 
 ; Choose energy arrays to match instrument 2D response
+default, instr, 'foxsi' 
 if instr eq 'foxsi' or instr eq 'foxsi2' then energy_edges  = findgen(201)/10.+1.95
 if instr eq 'nustar' then energy_edges = findgen(212)/25.+1.6
 energy_edges2 = get_edges( energy_edges, /edges_2 )	; needed format for f_vth
@@ -57,7 +60,7 @@ dlogt = average( get_edges( logte, /width ) )	; binwidth assuming evenly-spaced 
 if size(dem_cor, /n_dimensions) gt 1 then dem_cor = double( average( dem_cor, 1 ) )
 if size(dem_tr, /n_dimensions) gt 1 then dem_tr = double( average( dem_tr, 1 ) )
 
-; Note: if either dem_cor or dem_tr are zero (i.e. not input) then they won't contribute to this.
+; Note: if either dem_cor or dem_tr are zero then they won't contribute to this.
 em_cor_cm3 = dem_cor * pix_cm^2 * scale_height / (2 * length)
 em_tr_cm3 = dem_tr * pix_cm^2 / 2.
 em_cm3 = em_cor_cm3 + em_tr_cm3
