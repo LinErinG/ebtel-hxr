@@ -8,7 +8,7 @@ import os
 import subprocess
 
 #top_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-top_dir = '/home/andrew/ebtelPlusPlus/'
+top_dir = '/home/andrew/ebtelPlusPlus/'  # ebtel++ repo directory
 sys.path.append(os.path.join(top_dir,'rsp_toolkit/python'))
 from xml_io import InputHandler,OutputHandler
 
@@ -18,10 +18,9 @@ delay = float(sys.argv[3])
 looplength = float(sys.argv[4]) 
 filename = str(sys.argv[5])
 
-#configure the run
+#configure the ebtel run
 ih = InputHandler(os.path.join(top_dir,'config','ebtel.example.cfg.xml'))
 base_dir = ih.lookup_vars()
-#base_dir['total_time'] = delay*5
 base_dir['total_time'] = 5e4
 base_dir['loop_length'] = looplength
 base_dir['force_single_fluid'] = True
@@ -29,7 +28,6 @@ base_dir['use_flux_limiting'] = True
 base_dir['use_adaptive_solver'] = True
 base_dir['tau_max'] = 10
 base_dir['calculate_dem'] = True
-#base_dir['output_filename'] = 'hxr_heating_tests'
 base_dir['output_filename'] = '/home/andrew/foxsi/ebtel-hxr-master/mpfit/'+filename
 base_dir['heating']['partition'] = 0.5
 
