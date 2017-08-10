@@ -15,11 +15,11 @@ IF instr eq 'foxsi' THEN BEGIN
    dns_obs_aia = average(float(dns_obs_aia[1:*,*]),2)
 ENDIF ELSE IF instr eq 'nustar' THEN BEGIN
    restore, savdir+'aia_dn_s_pixel_nustar_regions.sav'
-   IF ~keyword_set(region) THEN BEGIN
+   IF ~isa(region) THEN BEGIN
       print, 'NuSTAR region must be specified'
-      return
+      return, 0
    ENDIF
-   dns_obs_aia = [dns_obs_aia[region,0:4],dns_obs_aia[region,6]]
+   dns_obs_aia = [[dns_obs_aia[region,0:4]],[dns_obs_aia[region,6]]]
 ENDIF
 
 wave = [94, 131, 171, 193, 211, 335]
