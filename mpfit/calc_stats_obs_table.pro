@@ -1,26 +1,28 @@
 PRO calc_stats_obs_table, obs_table, obs_chisq=obs_chisq, obs_likel=obs_likel, $
 dofill=dofill, nfill=nfill, minfill=minfill, maxfill=maxfill, fill=fill, $
 obs_table_fill=obs_table_fill, inst=inst, region=region, normalize=normalize, $
-stop=stop, norm_array=norm_array, reduced_chisq=reduced_chisq
+stop=stop, norm_array=norm_array, reduced_chisq=reduced_chisq, alldets=alldets
 
 IF inst eq 'foxsi' THEN BEGIN
-restore, '~/foxsi/ebtel-hxr-master/sav/foxsi2-d6-spex.sav', /v
-earray = spec.energy_kev
-sarray = spec.spec_p*ratio
-efactor = 1
-erange = [5,10]
+   IF keyword_set(alldets) THEN restore, '~/foxsi/ebtel-hxr-master/sav/foxsi2-alldets-spex.sav' ELSE $
+   restore, '~/foxsi/ebtel-hxr-master/sav/foxsi2_det6_countspec.sav'
+   earray = spec.energy_kev
+   if keyword_set(alldets) then sarray = spec.spec_p else sarray = spec.spec_p * ratio
+   efactor = 1
+   erange = [5,10]
 ; Chisq
-ec = where(earray ge min(erange) and earray le max(erange) and sarray gt 0)
+   ec = where(earray ge min(erange) and earray le max(erange) and sarray gt 0)
 ENDIF ELSE IF inst eq 'nustar' THEN BEGIN
-restore, '~/foxsi/ebtel-hxr-master/sav/O4P1G0_FPMA.dat', /v
-default, region, 0
-print, 'NuSTAR region is '+ids[region]
-earray = engs
-sarray = counts_flux[region,*]
-efactor = (dur*lvt)*(engs[1]-engs[0])
-erange = [2.5,5]
+   IF keyword_set(alldets) THEN restore, '~/foxsi/ebtel-hxr-master/sav/O4P1G0_alldets.dat' ELSE $
+   restore, '~/foxsi/ebtel-hxr-master/sav/O4P1G0_FPMA.dat'
+   default, region, 0
+   print, 'NuSTAR region is '+ids[region]
+   earray = engs
+   sarray = counts_flux[region,*]
+   efactor = (dur*lvt)*(engs[1]-engs[0])
+   erange = [2.5,5]
 ; Chisq
-ec = where(earray ge min(erange) and earray le max(erange) and sarray gt 0)
+   ec = where(earray ge min(erange) and earray le max(erange) and sarray gt 0)
 ENDIF
 
 s0 = (size(obs_table, /dimensions))[0]
@@ -83,7 +85,7 @@ FOR i=0, s0-1 DO BEGIN
    ENDFOR
 ENDFOR
 
-reduced_chisq = obs_chisq / (n_elements(ec)-4)
+reduced_chisq = obs_chisq / (n_elements(ec)-2)
 
 ; Likelihood
 el = where(earray ge min(erange) and earray le max(erange))
@@ -106,8 +108,10 @@ FOR i=0, s0-1 DO BEGIN
             ptot = 1
             FOR l=0, n_elements(el)-1 DO BEGIN
                IF keyword_set(normalize) THEN BEGIN
-                  IF i eq 60 and j eq 5 and k eq 98 then STOP
                   norm_p = total(sarray[el]) / total(obs_table[i,j,k,el])
+;                  print, norm_p * obs_table[i,j,k,el[l]] * efactor, sarray[el[l]] * efactor
+                  if norm_p * obs_table[i,j,k,el[l]] * efactor ne norm_p * obs_table[i,j,k,el[l]] * efactor $
+                  then STOP
                   p = poisson_table(norm_p * obs_table[i,j,k,el[l]] * efactor, sarray[el[l]] * efactor,$ 
                      ploose=ploose, pfine=pfine)
                   ptot *= p

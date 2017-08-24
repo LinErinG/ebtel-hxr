@@ -48,7 +48,7 @@ integration = 38.5	; duration of observation
 default, resp_dim, 2
 if resp_dim eq 1 then $
 count_rate = hxr_counts( energy, hxr, inst=inst, effarea=effarea) else $
-count_rate = hxr_counts_2d( energy, hxr, inst=inst, response=response)
+count_rate = hxr_counts_2d( energy, hxr, inst=inst, response=response, _extra=_extra)
 counts = total( count_rate, 1 )*integration  ; count spectrum in counts/keV
 print, total(counts)
 if total(counts) lt 0 then STOP

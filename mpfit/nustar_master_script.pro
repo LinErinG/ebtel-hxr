@@ -1,169 +1,207 @@
+PRO nustar_master_script, tabulate=tabulate, aia_tab=aia_tab, interp=interp, aia_interp=aia_interp, $
+aia_filter=aia_filter, regmin=regmin, regmax=regmax, display=display, histogram=histogram, $
+alldets=alldets, chidiff=chidiff
+
 cd, '~/foxsi/ebtel-hxr-master/mpfit/'
-restore,'../sav/O4P1G0_FPMA.dat'
+if keyword_set(alldets) then restore, '../sav/O4P1G0_alldets.dat' else $
+restore, '../sav/O4P1G0_FPMA.dat'
+if keyword_set(alldets) then detstr='alldets' else detstr='fpma'
+
+default, regmin, 0
+default, regmax, 4
+default, display, 0
 
 ; Tabulate NuSTAR fluxes for the full parameter space 
-.r
-FOR region=0, 4 DO BEGIN
-if region eq 3 then length=1d10 else length=7d9
-if region ge 2 then coronal=1 else coronal=0
-tabulate_ebtel_runs, inst='nustar', length=length, delay_range=[500,10000], $
-savefile='nustar'+ids[region]+'_obs_table_100Mm_delay10000.sav', region=region,$
-coronal=coronal
-ENDFOR
-end
+FOR reg=regmin, regmax DO BEGIN
+   IF reg eq 3 THEN BEGIN
+      length=1d10 
+      lstr='100Mm' 
+   ENDIF ELSE BEGIN
+      length=7d9
+      lstr='70Mm'
+   ENDELSE
+   IF reg ge 2 THEN BEGIN
+      coronal=1
+      addstr='_coronal'
+   ENDIF ELSE BEGIN
+      coronal=0
+      addstr=''
+   ENDELSE
+
+   if keyword_set(tabulate) then $
+      tabulate_ebtel_runs, inst='nustar', length=length, delay_range=[500,10000], $
+        heat_range=[0.005, 25], dur_range=[5, 500], savefile='nustar'+ids[reg]+'_'+detstr+$
+        '_obs_table_'+lstr+''+addstr+'.sav', reg=reg, coronal=coronal, alldets=alldets
 
 ; Use log interpolation and normalize spectra 
-.r
-FOR region=0, 4 DO BEGIN
-if region eq 3 then lengthstr='100Mm' else lengthstr='70Mm'
-restore, 'nustar'+ids[region]+'_obs_table_'+lengthstr+'_delay10000.sav', /v
-obs_table = obs_table[*,*,*,0:25]
-interp_obs_table, obs_table_file='nustar'+ids[region]+'_obs_table_'+lengthstr+'_delay10000.sav', table=obs_table, inst='nustar', $
-/calc_stats, savefile='nustar'+ids[region]+'_obs_table_'+lengthstr+'_interp_stats_delay10000_log_norm.sav', $
-/log, /normalize, region=region
+   IF keyword_set(interp) THEN BEGIN
+      restore, 'nustar'+ids[reg]+'_'+detstr+'_obs_table_'+lstr+''+addstr+'.sav'
+      obs_table = obs_table[*,*,*,0:25]
+      interp_obs_table, obs_table_file='nustar'+ids[reg]+'_'+detstr+'_obs_table_'+lstr+$
+        ''+addstr+'.sav', table=obs_table, inst='nustar', /calc_stats, $
+        savefile='nustar'+ids[reg]+'_'+detstr+'_obs_table_'+lstr+'_interp_stats'+addstr+$
+        '_log_norm.sav', /log, /normalize, reg=reg, alldets=alldets
+   ENDIF
+
 ENDFOR
-end
 
 ; Tabulate AIA & XRT flux values
-tabulate_aia_xrt_flux, length=7d9, delay_range=[500,10000], instr='nustar', $
-savefile='aia_table_70Mm_delay10000.sav'
+IF keyword_set(aia_tab) THEN BEGIN
+   tabulate_aia_xrt_flux, length=7d9, delay_range=[500,10000], heat_range=[0.005, 25], $
+                            dur_range=[5, 500], instr='nustar', reg=0, savefile='aia_table_70Mm.sav'
+   tabulate_aia_xrt_flux, length=1d10, delay_range=[500,10000], heat_range=[0.005, 25], $
+                            dur_range=[5, 500], instr='nustar', reg=0, savefile='aia_table_100Mm.sav'
+   tabulate_aia_xrt_flux, length=7d9, delay_range=[500,10000], heat_range=[0.005, 25], $
+                             dur_range=[5, 500],  instr='nustar', reg=0, savefile='aia_table_70Mm_coronal.sav', /coronal
+   tabulate_aia_xrt_flux, length=1d10, delay_range=[500,10000], heat_range=[0.005, 25], $
+                            dur_range=[5, 500], instr='nustar', reg=0, savefile='aia_table_100Mm_coronal.sav', /coronal
+ENDIF
+
 ; Interpolate to a finer grid 
-interp_aia_xrt_table, 'aia_table_70Mm_delay10000.sav', /log, savefile='aia_table_70Mm_delay10000_interp_log.sav'
+IF keyword_set(aia_interp) THEN BEGIN
+   interp_aia_xrt_table, 'aia_table_70Mm.sav', /log, savefile='aia_table_70Mm_interp_log.sav'
+   interp_aia_xrt_table, 'aia_table_100Mm.sav', /log, savefile='aia_table_100Mm_interp_log.sav'
+   interp_aia_xrt_table, 'aia_table_70Mm_coronal.sav', /log, savefile='aia_table_70Mm_coronal_interp_log.sav'
+   interp_aia_xrt_table, 'aia_table_100Mm_coronal.sav', /log, savefile='aia_table_100Mm_coronal_interp_log.sav'
+ENDIF
+
 ; Make filters from AIA & XRT data
-; Different filter for each active region, b/c norm_array is different 
-.r
-FOR region=0, 4 DO BEGIN
-print, 'Region = '
-print, region
-if region eq 3 then lengthstr='100Mm' else lengthstr='70Mm'
-restore, 'nustar'+ids[region]+'_obs_table_'+lengthstr+'_interp_stats_delay10000_log_norm.sav', /v
-make_aia_xrt_filter, 'aia_table_'+lengthstr+'_delay10000_interp_log.sav', $
-savefile='aia_filters_'+lengthstr+'_delay10000_interp_log_'+ids[region]+'.sav', norm_array=norm_array, nfill=0, instr='nustar', region=region
-ENDFOR
-end
+; Different filter for each active reg, b/c norm_array is different 
+
+FOR reg=regmin, regmax DO BEGIN
+
+if reg eq 3 then lstr='100Mm' else lstr='70Mm'
+if reg ge 2 then addstr='_coronal' else addstr=''
+
+IF keyword_set(aia_filter) THEN BEGIN
+   restore, 'nustar'+ids[reg]+'_'+detstr+'_obs_table_'+lstr+'_interp_stats'+addstr+'_log_norm.sav'
+   make_aia_xrt_filter, 'aia_table_'+lstr+''+addstr+'_interp_log.sav', $
+    savefile='aia_filters_'+lstr+''+addstr+'_interp_log_'+ids[reg]+'.sav', norm_array=norm_array, $
+    nfill=0, instr='nustar', reg=reg
+ENDIF
 
 ; Make flux limit tables for 70Mm and 100Mm
-make_flux_limit_table, obs_table_file='nustarL2_obs_table_100Mm_interp_stats_delay10000_log_norm.sav', $
-length=1d10, savefile='flux_limits_100Mm_delay10000.sav'
+make_flux_limit_table, obs_table_file='nustarD2_'+detstr+'_obs_table_70Mm_interp_stats_log_norm.sav', $
+   length=7d9, savefile='flux_limits_70Mm.sav'
+make_flux_limit_table, obs_table_file='nustarL2_'+detstr+'_obs_table_100Mm_interp_stats_coronal_log_norm.sav', $
+   length=1d10, savefile='flux_limits_100Mm.sav'
+
+
+; Load in NuSTAR data, flux limits, and AIA limits
+savefile = 'nustar'+ids[reg]+'_'+detstr+'_obs_table_'+lstr+'_interp_stats'+addstr+'_log_norm.sav'
+flux_file = 'flux_limits_'+lstr+'.sav'
+aia_file = 'aia_filters_'+lstr+''+addstr+'_interp_log_'+ids[reg]+'.sav'
+restore, savefile
+restore, flux_file 
+restore, aia_file
+
 
 ; Make plots with 3rd free parameter re-optimized
-!p.multi=0
-.r
-FOR region=0, 4 DO BEGIN
-if region eq 3 then lengthstr='100Mm' else lengthstr='70Mm'
-restore, 'nustar'+ids[region]+'_obs_table_'+lengthstr+'_interp_stats_delay10000_log_norm.sav' , /v 
 mx1 = max(alog10(obs_chisq_fill_interp))
 mx2 = max(obs_likel_fill_interp)
-plot_params_reopt_nofill, savefile='nustar'+ids[region]+'_obs_table_'+lengthstr+'_interp_stats_delay10000_log_norm.sav', $
-startstring='nustar'+ids[region]+'_', endstring='_delay10000_log_norm', heat0=heat0, delay=delay, $
-duration=duration, colormax1=mx1, colormax2=mx2
-spawn, 'evince nustar'+ids[region]+'_obs_likel_interp_heat0_duration_reopt_delay10000_log_norm.eps &'
-spawn, 'evince nustar'+ids[region]+'_obs_likel_interp_heat0_delay_reopt_delay10000_log_norm.eps &'
-spawn, 'evince nustar'+ids[region]+'_obs_likel_interp_delay_duration_reopt_delay10000_log_norm.eps &'
-stop
-ENDFOR
-end
+plot_params_reopt_nofill, savefile=savefile, startstr='nustar'+ids[reg]+'_'+detstr+'_', endstr=''+addstr+'_log_norm',$
+  heat0=heat0, delay=delay, duration=duration, /setheat0, /setdelay, /setduration, colormax1=mx1, colormax2=mx2
+IF display THEN BEGIN
+   spawn, 'evince nustar'+ids[reg]+'_'+detstr+'_obs_likel_interp_heat0_duration_reopt'+addstr+'_log_norm.eps &'
+   spawn, 'evince nustar'+ids[reg]+'_'+detstr+'_obs_likel_interp_heat0_delay_reopt'+addstr+'_log_norm.eps &'
+   spawn, 'evince nustar'+ids[reg]+'_'+detstr+'_obs_likel_interp_delay_duration_reopt'+addstr+'_log_norm.eps &'
+ENDIF
 
 ; Plot histograms of different parameters at optimal values
-device, Window_State=win
-; Heating
-hhist = histogram(heat0, min=0.005, max=0.5, nbins=20, locations=nh)
-if win[0] eq 0 then window, 0, retain=2 else wset, 0
-plot, nh, hhist, psy=10, thick=3, xr=[0.05, 0.50], xtit='Heating', ytit='Frequency'
-; Duration
-durhist = histogram(duration, min=50, max=500, nbins=20, locations=ndur)
-if win[1] eq 0 then window, 1, retain=2 else wset, 1 
-plot, ndur, durhist, psy=10, thick=3, xr=[0, 550], xtit='Duration', ytit='Frequency'
-; Delay 
-dhist = histogram(delay, min=500, max=10000, nbins=20, locations=nd)
-if win[2] eq 0 then window, 2, retain=2 else wset, 2 
-plot, nd, dhist, psy=10, thick=3, xr=[0, 10500], xtit='Delay', ytit='Frequency' 
-; Fill factor 
-restore, 'nustar'+ids[region]+'_obs_table'+lengthstr+'_interp_stats_delay10000_log_norm.sav', /v  
-hn = histogram(alog10(norm_array), min=-10, max=8, nbins=20, locations=nn)
-if win[3] eq 0 then window, 3, retain=2 else wset, 3
-plot, nn, hn, xr=[-10, 8], xtit='Log(Fill Factor)', ytit='Frequency', psy=10, thick=3
-stop
-ENDFOR
-end
+;if keyword_set(histogram) then plot_param_hist, heat0, duration, delay, savefile='nustar'+ids[reg]+'_'+detstr+'_obs_table'+$
+;lstr+'_interp_stats'+addstr+'_log_norm.sav'
 
 ; Put energy flux limits in 
-.r
-FOR region=0, 4 DO BEGIN
-if region eq 3 then lengthstr='100Mm' else lengthstr='70Mm'
-restore, 'nustar'+ids[region]+'_obs_table_'+lengthstr+'_interp_stats_delay10000_log_norm.sav', /v  
-restore, 'flux_limits_'+lengthstr+'_delay10000.sav', /v 
-obs_chisq_fill_interp = obs_chisq_fill_interp / flux_limit_interp
-obs_likel_fill_interp = obs_likel_fill_interp * flux_limit_interp
-plot_params_reopt_nofill, savefile='nustar'+ids[region]+'_obs_table_'+lengthstr+'_interp_stats_delay10000_log_norm.sav',$
-startstring='nustar'+ids[region]+'_', endstring='_delay10000_log_norm_flux_limits', $
-chisq_table=obs_chisq_fill_interp, likel_table=obs_likel_fill_interp
-spawn, 'evince nustar'+ids[region]+'_obs_likel_interp_heat0_duration_reopt_delay10000_log_norm_flux_limits.eps &'
-spawn, 'evince nustar'+ids[region]+'_obs_likel_interp_heat0_delay_reopt_delay10000_log_norm_flux_limits.eps &'
-spawn, 'evince nustar'+ids[region]+'_obs_likel_interp_delay_duration_reopt_delay10000_log_norm_flux_limits.eps &'
-stop
+;obs_chisq_flux = obs_chisq_fill_interp / flux_limit_interp
+;obs_likel_flux = obs_likel_fill_interp * flux_limit_interp
+;plot_params_reopt_nofill, savefile='nustar'+ids[reg]+'_'+detstr+'_obs_table_'+lstr+'_interp_stats'+addstr+$
+;'_log_norm.sav', startstr='nustar'+ids[reg]+'_'+detstr+'_', endstr=''+addstr+'_log_norm_flux_limits', $
+;chisq_table=obs_chisq_flux, likel_table=obs_likel_flux, colormax1=mx1, colormax2=mx2
+;IF display THEN BEGIN
+;   spawn, 'evince nustar'+ids[reg]+'_'+detstr+'_obs_likel_interp_heat0_duration_reopt'+addstr+'_log_norm_flux_limits.eps &'
+;   spawn, 'evince nustar'+ids[reg]+'_'+detstr+'_obs_likel_interp_heat0_delay_reopt'+addstr+'_log_norm_flux_limits.eps &'
+;   spawn, 'evince nustar'+ids[reg]+'_'+detstr+'_obs_likel_interp_delay_duration_reopt'+addstr+'_log_norm_flux_limits.eps &'
+;ENDIF
+
 
 ; Put AIA/XRT limits in 
-restore, 'nustar'+ids[region]+'_obs_table_'+lengthstr+'_interp_stats_delay10000_log_norm.sav', /v
-restore, 'aia_filters_'+lengthstr+'_delay10000_interp_log_'+ids[region]+'.sav', /v
-obs_chisq_fill_interp = obs_chisq_fill_interp / aia_filter 
-obs_likel_fill_interp = obs_likel_fill_interp * aia_filter 
-plot_params_reopt_nofill, savefile='nustar'+ids[region]+'_obs_table_'+lengthstr+'_interp_stats_delay10000_log_norm.sav',$
-startstring='nustar'+ids[region]+'_', endstring='_delay10000_log_norm_aia_limits', chisq_table=obs_chisq_fill_interp, $
-likel_table=obs_likel_fill_interp
-spawn, 'evince nustar'+ids[region]+'_obs_likel_interp_heat0_duration_reopt_delay10000_log_norm_aia_limits.eps &'
-spawn, 'evince nustar'+ids[region]+'_obs_likel_interp_heat0_delay_reopt_delay10000_log_norm_aia_limits.eps &'
-spawn, 'evince nustar'+ids[region]+'_obs_likel_interp_delay_duration_reopt_delay10000_log_norm_aia_limits.eps &'
-stop
+;obs_chisq_aia = obs_chisq_fill_interp / aia_filter 
+;obs_likel_aia = obs_likel_fill_interp * aia_filter 
+;plot_params_reopt_nofill, savefile='nustar'+ids[reg]+'_'+detstr+'_obs_table_'+lstr+'_interp_stats'+addstr+$
+;'_log_norm.sav', startstr='nustar'+ids[reg]+'_'+detstr+'_', endstr=''+addstr+'_log_norm_aia_limits', $
+;chisq_table=obs_chisq_aia, likel_table=obs_likel_aia, colormax1=mx1, colormax2=mx2
+;IF display THEN BEGIN
+;   spawn, 'evince nustar'+ids[reg]+'_'+detstr+'_obs_likel_interp_heat0_duration_reopt'+addstr+'_log_norm_aia_limits.eps &'
+;   spawn, 'evince nustar'+ids[reg]+'_'+detstr+'_obs_likel_interp_heat0_delay_reopt'+addstr+'_log_norm_aia_limits.eps &'
+;   spawn, 'evince nustar'+ids[reg]+'_'+detstr+'_obs_likel_interp_delay_duration_reopt'+addstr+'_log_norm_aia_limits.eps &'
+;ENDIF
+
 
 ; Put in all the limits 
-restore, 'flux_limits_'+lengthstr+'_delay10000.sav', /v 
-restore, 'nustar'+ids[region]+'_obs_table_'+lengthstr+'_interp_stats_delay10000_log_norm.sav', /v
-mx1 = max(alog10(obs_chisq_fill_interp))
-mx2 = max(obs_likel_fill_interp)
-restore, 'aia_filters_'+lengthstr+'_delay10000_interp_log_'+ids[region]+'.sav', /v
-obs_chisq_fill_interp = obs_chisq_fill_interp / aia_filter / flux_limit_interp
-obs_likel_fill_interp = obs_likel_fill_interp * aia_filter * flux_limit_interp
-plot_params_reopt_nofill, savefile='nustar'+ids[region]+'_obs_table_'+lengthstr+'_interp_stats_delay10000_log_norm.sav',$
-startstring='nustar'+ids[region]+'_', endstring='_delay10000_log_norm_all_limits', chisq_table=obs_chisq_fill_interp, $
-likel_table=obs_likel_fill_interp, delay=delay, duration=duration, heat0=heat0, colormax1=mx1, colormax2=mx2
-spawn, 'evince nustar'+ids[region]+'_obs_likel_interp_heat0_duration_reopt_delay10000_log_norm_all_limits.eps &'
-spawn, 'evince nustar'+ids[region]+'_obs_likel_interp_heat0_delay_reopt_delay10000_log_norm_all_limits.eps &'
-spawn, 'evince nustar'+ids[region]+'_obs_likel_interp_delay_duration_reopt_delay10000_log_norm_all_limits.eps &'
-stop
+obs_chisq_all = obs_chisq_fill_interp / aia_filter / flux_limit_interp
+obs_likel_all = obs_likel_fill_interp * aia_filter * flux_limit_interp
+plot_params_reopt_nofill, savefile='nustar'+ids[reg]+'_'+detstr+'_obs_table_'+lstr+'_interp_stats'+addstr+$
+'_log_norm.sav', startstr='nustar'+ids[reg]+'_'+detstr+'_', endstr=''+addstr+'_log_norm_all_limits', $
+chisq_table=obs_chisq_all, likel_table=obs_likel_all, delay=delay, duration=duration, heat0=heat0, $
+colormax1=mx1, colormax2=mx2, /setdelay, /setduration, /setheat0
+IF display THEN BEGIN
+   spawn, 'evince nustar'+ids[reg]+'_'+detstr+'_obs_likel_interp_heat0_duration_reopt'+addstr+'_log_norm_all_limits.eps &'
+   spawn, 'evince nustar'+ids[reg]+'_'+detstr+'_obs_likel_interp_heat0_delay_reopt'+addstr+'_log_norm_all_limits.eps &'
+   spawn, 'evince nustar'+ids[reg]+'_'+detstr+'_obs_likel_interp_delay_duration_reopt'+addstr+'_log_norm_all_limits.eps &'
+ENDIF
 
+; Plot two-panel plots with the 3rd parameter heat maps
+mapstring = 'nustar'+ids[reg]+'_'+detstr+'_reopt_maps'+addstr+'_log_norm'
+
+default, chidiff, 6.25  ; 90% confidence intervals
+
+plot_params_reopt_twoframe_nustar, savefile=savefile, mapstring=mapstring, startstr='nustar'+ids[reg]+'_'+detstr+'_', $
+   endstr=addstr+'_log_norm', reg=reg, display=display, stop=stop, chidiff=chidiff
+
+plot_params_reopt_twoframe_nustar, savefile=savefile, mapstring=mapstring, startstr='nustar'+ids[reg]+'_'+detstr+'_', $
+   endstr=addstr+'_log_norm', reg=reg, display=display, stop=stop, /all_limits, chidiff=chidiff
+  
+
+IF keyword_set(histogram) THEN BEGIN
 ; Plot chi-squared histogram for 3 cases (no limits, flux limits,
 ; AIA/XRT limits) 
-param_limits_hist, inst_file='nustar'+ids[region]+'_obs_table_'+lengthstr+'_interp_stats_delay10000_log_norm.sav', $
-aia_xrt_file='aia_filters_'+lengthstr+'_delay10000_interp_log_'+ids[region]+'.sav', flux_file='flux_limits_'+lengthstr+'_delay10000.sav',$
-figfile='nustar'+ids[region]+'_chisq_hist_delay10000_norm.eps', figtitle='NuSTAR AR '+ids[region]+' '+lengthstr, $
-max=100, instr='nustar'
+   param_limits_hist, inst_file=savefile, aia_xrt_file=aia_file, flux_file=flux_file, $
+      figfile='nustar'+ids[reg]+'_'+detstr+'_chisq_hist'+addstr+'_norm.eps', figtitle='NuSTAR AR '+ids[reg]+' '+lstr, $
+      max=100, instr='nustar'
 ; Reduced chi-squared 
-param_limits_hist, inst_file='nustar'+ids[region]+'_obs_table_'+lengthstr+'_interp_stats_delay10000_log_norm.sav', $
-aia_xrt_file='aia_filters_'+lengthstr+'_delay10000_interp_log_'+ids[region]+'.sav', flux_file='flux_limits_'+lengthstr+'_delay10000.sav',$
-figfile='nustar'+ids[region]+'_reduced_chisq_hist_delay10000_norm.eps', figtitle='NuSTAR AR '+ids[region]+' '+lengthstr, /reduced
+   param_limits_hist, inst_file=savefile, aia_xrt_file=aia_file, flux_file=flux_file, $
+      figfile='nustar'+ids[reg]+'_'+detstr+'_reduced_chisq_hist'+addstr+'_norm.eps', $
+      figtitle='NuSTAR AR '+ids[reg]+' '+lstr, /reduced
+
 
 ; Plot fill factor histogram for 3 cases (no limits, flux limits,
 ; AIA/XRT limits)
-norm_array_flux = norm_array * flux_limit_interp
-norm_array_aia = norm_array * aia_filter 
-hn = histogram(alog10(norm_array), min=-10, max=8, nbins=20, locations=nn)
-hf = histogram(alog10(norm_array_flux), min=-10, max=8, nbins=20, locations=nf)
-hax = histogram(alog10(norm_array_aia), min=-10, max=8, nbins=20, locations=nax)
-cgps_open, 'nustar'+ids[region]+'_fill_hist_delay10000_norm.eps', /encaps
-plot, nn, hn, xr=[-10, 8], xtit='Log(Fill Factor)', ytit='Frequency', psy=10, thick=3, $
-tit='NuSTAR AR '+ids[region]+' '+lengthstr
-oplot, nf, hf, linest=1, color=150, psy=10, thick=3 
-oplot, nax, hax, linest=2, color=200, psy=10, thick=3 
-al_legend, ['No Limits', 'Energy Limit', 'AIA Limits'], linest=[0,1,2], thick=3, $
-color=[0,150,200], box=0, /top, /right, charsi=1.2, charthick=1.3
-cgps_close
+   norm_array_flux = norm_array * flux_limit_interp
+   norm_array_aia = norm_array * aia_filter 
+   hn = histogram(alog10(norm_array), min=-10, max=8, nbins=20, locations=nn)
+   hf = histogram(alog10(norm_array_flux), min=-10, max=8, nbins=20, locations=nf)
+   hax = histogram(alog10(norm_array_aia), min=-10, max=8, nbins=20, locations=nax)
+   !p.multi=0
+   cgps_open, 'nustar'+ids[reg]+'_'+detstr+'_fill_hist'+addstr+'_norm.eps', /encaps
+   plot, nn, hn, xr=[-10, 8], xtit='Log(Fill Factor)', ytit='Frequency', psy=10, thick=3, $
+         tit='NuSTAR AR '+ids[reg]+' '+lstr
+   oplot, nf, hf, linest=1, color=150, psy=10, thick=3 
+   oplot, nax, hax, linest=2, color=200, psy=10, thick=3 
+   al_legend, ['No Limits', 'Energy Limit', 'AIA Limits'], linest=[0,1,2], thick=3, $
+              color=[0,150,200], box=0, /top, /right, charsi=1.2, charthick=1.3
+   cgps_close
 
-spawn, 'evince nustar'+ids[region]+'_chisq_hist_delay10000_norm.eps &'
-spawn, 'evince nustar'+ids[region]+'_reduced_chisq_hist_delay10000_norm.eps &'
-spawn, 'evince nustar'+ids[region]+'_fill_hist_delay10000_norm.eps &'
+   IF display THEN BEGIN
+      spawn, 'evince nustar'+ids[reg]+'_'+detstr+'_chisq_hist'+addstr+'_norm.eps &'
+      spawn, 'evince nustar'+ids[reg]+'_'+detstr+'_reduced_chisq_hist'+addstr+'_norm.eps &'
+      spawn, 'evince nustar'+ids[reg]+'_'+detstr+'_fill_hist'+addstr+'_norm.eps &'
+   ENDIF
 
-stop
+ENDIF
+
 ENDFOR
+
+
+
 end
 
