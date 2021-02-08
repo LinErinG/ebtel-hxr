@@ -7,28 +7,31 @@
 ;emissions in the CHIANTI database. _VTH default provides both continuum and lines, but F_VTH keywords can be passed through if this is not desired.
 ;
 ; INPUT:
-;   LOGTE:		log(T) temperature array (temperature measured in Kelvin)
-;   DEM:		Differential emission measure in units of cm^-5 K^-1 corresponding logte array
-;   PIX_CM:		1D dimension of the measured region (i.e. sqrt of the area) in cm.
-;	LENGTH:		Loop half length
+;   LOGTE:	log(T) temperature array (temperature measured in Kelvin)
+;   DEM:	Differential emission measure in units of cm^-5 K^-1 corresponding logte array
+;   PIX_CM:	1D dimension of the measured region (i.e. sqrt of the area) in cm.
+;   LENGTH:	Loop half length
 ;
 ; OUTPUT:
 ;   ENERGY:	Midpoints of energy bins
 ;
 ; KEYWORDS:
-;	dem_cor:	Coronal DEM in cm^-5
-;	dem_tr:		Transition region DEM in cm^-5.  Either coronal or TR must be supplied.
-;	scale_height:	Coronal density scale height
+;   dem_cor:	Coronal DEM in cm^-5
+;   dem_tr:	Transition region DEM in cm^-5.  Either coronal or TR must be supplied.
+;   scale_height:	Coronal density scale height
 ;
 ;
 ; HISTORY:
-;2015-nov-12		LG	Wrote routine
-;2016-sep-24		AJM     Correct treatment of coronal and TR DEMs
-;2016-sep-25		LG Update to argument ordering, treatment of dem_cor and dem_tr, and header
-;-
+;2015-nov-12		LG Wrote routine
+;2016-sep-24		AJM Correct treatment of coronal and TR DEMs
+;2016-sep-25		LG Update to argument ordering, treatment of
+;dem_cor and dem_tr, and header
+;2017-feb-16            AJM Changed energy arrays to match 2D
+;responses and added instrument keyword
+;2017-apr-20            AJM Updated NuSTAR earray (dE=0.04 keV)
 
 FUNCTION DEM_HXR, logte, pix_cm, length, energy, dem_cor=dem_cor, dem_tr=dem_tr, $
-                  scale_height=scale_height, _extra=_extra
+scale_height=scale_height, instr=instr, _extra=_extra
 
 default, scale_height, 5.e9
 
@@ -37,11 +40,15 @@ if ~keyword_set(dem_cor) and ~keyword_set(dem_tr) then begin
    return, 0
 endif
 
+if keyword_set(coronal) then dem_tr = 0 
+
 default, dem_cor, 0.
 default, dem_tr, 0.
 
-; Various styles of energy arrays for use later
-energy_edges  = findgen(1000)/50.+2
+; Choose energy arrays to match instrument 2D response
+default, instr, 'foxsi' 
+if instr eq 'foxsi' or instr eq 'foxsi2' then energy_edges  = findgen(201)/10.+1.95
+if instr eq 'nustar' then energy_edges = findgen(212)/25.+1.6
 energy_edges2 = get_edges( energy_edges, /edges_2 )	; needed format for f_vth
 energy_mid = get_edges( energy_edges, /mean )
 energy_wid = average( get_edges( energy_edges, /width ) )
@@ -53,7 +60,7 @@ dlogt = average( get_edges( logte, /width ) )	; binwidth assuming evenly-spaced 
 if size(dem_cor, /n_dimensions) gt 1 then dem_cor = double( average( dem_cor, 1 ) )
 if size(dem_tr, /n_dimensions) gt 1 then dem_tr = double( average( dem_tr, 1 ) )
 
-; Note: if either dem_cor or dem_tr are zero (i.e. not input) then they won't contribute to this.
+; Note: if either dem_cor or dem_tr are zero then they won't contribute to this.
 em_cor_cm3 = dem_cor * pix_cm^2 * scale_height / (2 * length)
 em_tr_cm3 = dem_tr * pix_cm^2 / 2.
 em_cm3 = em_cor_cm3 + em_tr_cm3

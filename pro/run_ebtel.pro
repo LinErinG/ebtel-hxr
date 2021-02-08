@@ -15,14 +15,15 @@
 ;
 ; KEYWORDS:
 ;		DURATION:	Duration in seconds.  Default 10k
-;		NFLARES:	Number of flares in a train.  Only the last flare is analyzed.  Default 1
+;		NFLARES:	Number of flares in a train.  Average over last flare only.  Default 1
 ;		HEAT0:		Flare heating amplitude (erg cm^-3 s^-1).  Default 0.01
 ;		LENGTH:		Loop half length (cm).  Default 7.5e9 cm
 ;		HEAT_BKG:	Low level constant background heating, in (erg cm^-3 s^-1).  Default 1.e-6
-;		FLARE_DUR:	Total duration of flare in seconds, with symmetric, triangular rise and decay.
+;		FLARE_DUR:	Total duration of flare in seconds; symmetric triangular profile.
 ;
 ;	KEYWORDS (OUTPUT) -- 
-;		avg_dem_cm5_cor		Just like the return value but only for the corona.
+;		dem_cm5_cor		Coronal DEM
+;               dem_cm5_tr              Transition Region DEM
 ;
 ;		Others are all outputs ferried straight from EBTEL output:
 
@@ -37,13 +38,14 @@
 ;2015-nov-12	LG	Wrote routine
 ;2016-aug-10    AJM     Put in correct use of length keyword
 ;2016-sep-24    AJM     Added TR keyword. Changed keyword names 
+;2017-feb-02    AJM     Changed time keyword, code description
 ;-
 
 
-FUNCTION RUN_EBTEL, time, duration=duration, t_heat=t_heat, nFlares=nFlares, $
+FUNCTION RUN_EBTEL, time=time, duration=duration, t_heat=t_heat, nFlares=nFlares, $
                     heat0=heat0, heat_bkg=heat_bkg, heat_array=heat, length=length, te=te, $
-                    dens=dens, p=p, v=v, c11=c11, logtdem=logtdem, $
-                    dem_cm5_cor=dem_cm5_cor, dem_cm5_tr=dem_cm5_tr, stop = stop, _extra = _extra
+                    dens=dens, p=p, v=v, c11=c11, logtdem=logtdem, stop=stop, $
+                    dem_cm5_cor=dem_cm5_cor, dem_cm5_tr=dem_cm5_tr, _extra=_extra
 	
 	default, duration, long(10000)
 	default, t_heat, 500
